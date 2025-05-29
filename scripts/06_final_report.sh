@@ -74,8 +74,11 @@ if is_profile_active "litellm"; then
   echo "================================= LiteLLM ============================="
   echo
   echo "Host: ${LITELLM_HOSTNAME:-<hostname_not_set>}"
+  echo "Dashboard: ${LITELLM_HOSTNAME:-<hostname_not_set>}/ui"
   echo "User: admin"
   echo "Password: ${LITELLM_MASTER_KEY:-<not_set_in_env>}"
+  echo
+  echo "Internal Access (e.g., from OpenWebUI): http://litellm:4000"
 fi
 
 if is_profile_active "supabase"; then
