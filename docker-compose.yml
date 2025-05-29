@@ -67,6 +67,9 @@ x-init-ollama: &init-ollama
 services:
   litellm:
     image: ghcr.io/berriai/litellm:main-stable
+    container_name: litellm
+    profiles: ["litellm"]
+
     #########################################
     ## Uncomment these lines to start proxy with a config.yaml file ##
     # volumes:
