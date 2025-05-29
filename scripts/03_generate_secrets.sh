@@ -21,6 +21,8 @@ DOMAIN_PLACEHOLDER="yourdomain.com"
 # Variables to generate: varName="type:length"
 # Types: password (alphanum), secret (base64), hex, base64, alphanum
 declare -A VARS_TO_GENERATE=(
+    ["LITELLM_MASTER_KEY"]="password:32"
+    ["LITELLM_SALT_KEY"]="secret:64"
     ["FLOWISE_PASSWORD"]="password:32"
     ["N8N_ENCRYPTION_KEY"]="secret:64" # base64 encoded, 48 bytes -> 64 chars
     ["N8N_USER_MANAGEMENT_JWT_SECRET"]="secret:64" # base64 encoded, 48 bytes -> 64 chars
