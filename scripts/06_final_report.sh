@@ -69,6 +69,15 @@ if is_profile_active "flowise"; then
   echo "Password: ${FLOWISE_PASSWORD:-<not_set_in_env>}"
 fi
 
+if is_profile_active "litellm"; then
+  echo
+  echo "================================= LiteLLM ============================="
+  echo
+  echo "Host: ${LITELLM_HOSTNAME:-<hostname_not_set>}"
+  echo "User: admin"
+  echo "Password: ${LITELLM_MASTER_KEY:-<not_set_in_env>}"
+fi
+
 if is_profile_active "supabase"; then
   echo
   echo "================================= Supabase ============================"
