@@ -52,6 +52,7 @@ current_profiles_for_matching=",$CURRENT_PROFILES_VALUE,"
 base_services_data=(
     "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
     "flowise" "Flowise (AI Agent Builder)"
+    "litellm" "LLM Proxy Service"
     "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
     "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
     "qdrant" "Qdrant (Vector Database)"
