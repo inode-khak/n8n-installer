@@ -3,12 +3,6 @@
     email {$LETSENCRYPT_EMAIL}
 }
 
-# LiteLLM
-llm.infjtech.com {
-    # For domains, Caddy will automatically use Let's Encrypt
-    # For localhost/port addresses, HTTPS won't be enabled
-    reverse_proxy litellm:4000
-}
 
 # N8N
 {$N8N_HOSTNAME} {
@@ -25,6 +19,13 @@ llm.infjtech.com {
 # Flowise
 {$FLOWISE_HOSTNAME} {
     reverse_proxy flowise:3001
+}
+
+# LiteLLM
+{$LITELLM_HOSTNAME} {
+    # For domains, Caddy will automatically use Let's Encrypt
+    # For localhost/port addresses, HTTPS won't be enabled
+    reverse_proxy litellm:4000
 }
 
 # Langfuse
