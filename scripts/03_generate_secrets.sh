@@ -39,20 +39,28 @@ declare -A VARS_TO_GENERATE=(
     ["VAULT_ENC_KEY"]="alphanum:32"
     ["LOGFLARE_LOGGER_BACKEND_API_KEY"]="secret:64" # base64 encoded, 48 bytes -> 64 chars
     ["LOGFLARE_API_KEY"]="secret:64" # base64 encoded, 48 bytes -> 64 chars
+    ["LOGFLARE_PRIVATE_ACCESS_TOKEN"]="fixed:not-in-use" # For supabase-vector, can't be empty
+    ["LOGFLARE_PUBLIC_ACCESS_TOKEN"]="fixed:not-in-use" # For supabase-vector, can't be empty
     ["PROMETHEUS_PASSWORD"]="password:32" # Added Prometheus password
     ["SEARXNG_PASSWORD"]="password:32" # Added SearXNG admin password
     ["LETTA_SERVER_PASSWORD"]="password:32" # Added Letta server password
     ["LANGFUSE_INIT_USER_PASSWORD"]="password:32"
     ["LANGFUSE_INIT_PROJECT_PUBLIC_KEY"]="langfuse_pk:32"
     ["LANGFUSE_INIT_PROJECT_SECRET_KEY"]="langfuse_sk:32"
+    ["WEAVIATE_API_KEY"]="secret:48" # API Key for Weaviate service (36 bytes -> 48 chars base64)
+    ["NEO4J_AUTH_PASSWORD"]="password:32" # Added Neo4j password
+    ["NEO4J_AUTH_USERNAME"]="fixed:neo4j" # Added Neo4j username
 )
 
-# Check if .env file already exists
+# Initialize existing_env_vars and attempt to read .env if it exists
+log_info "Initializing environment configuration..."
+declare -A existing_env_vars
+declare -A generated_values
+
 if [ -f "$OUTPUT_FILE" ]; then
-    log_info "$OUTPUT_FILE already exists. Reading existing values and will only fill missing ones."
-    declare -A existing_env_vars # Declare here if only used after this block
+    log_info "Found existing $OUTPUT_FILE. Reading its values to use as defaults and preserve current settings."
     while IFS= read -r line || [[ -n "$line" ]]; do
-        if [[ -n "$line" && ! "$line" =~ ^\\s*# && "$line" == *"="* ]]; then
+        if [[ -n "$line" && ! "$line" =~ ^\s*# && "$line" == *"="* ]]; then
             varName=$(echo "$line" | cut -d'=' -f1 | xargs)
             varValue=$(echo "$line" | cut -d'=' -f2-)
             # Repeatedly unquote "value" or 'value' to get the bare value
@@ -72,9 +80,6 @@ if [ -f "$OUTPUT_FILE" ]; then
             existing_env_vars["$varName"]="$varValue"
         fi
     done < "$OUTPUT_FILE"
-else
-    log_info "No existing $OUTPUT_FILE found. Will generate a new one."
-    declare -A existing_env_vars # Ensure it's declared even if file doesn't exist
 fi
 
 # Install Caddy
@@ -89,43 +94,62 @@ if ! command -v caddy &> /dev/null; then
 fi
 
 # Prompt for the domain name
-while true; do
-    echo ""
-    read -p "Enter the primary domain name for your services (e.g., example.com): " DOMAIN
+DOMAIN="" # Initialize DOMAIN variable
 
-    # Validate domain input
-    if [[ -z "$DOMAIN" ]]; then
-        log_error "Domain name cannot be empty." >&2
-        continue # Ask again
-    fi
+# Try to get domain from existing .env file first
+# Check if USER_DOMAIN_NAME is set in existing_env_vars and is not empty
+if [[ -v existing_env_vars[USER_DOMAIN_NAME] && -n "${existing_env_vars[USER_DOMAIN_NAME]}" ]]; then
+    DOMAIN="${existing_env_vars[USER_DOMAIN_NAME]}"
+    # Ensure this value is carried over to generated_values for writing and template processing
+    # If it came from existing_env_vars, it might already be there, but this ensures it.
+    generated_values["USER_DOMAIN_NAME"]="$DOMAIN"
+else
+    while true; do
+        echo ""
+        prompt_text="Enter the primary domain name for your services (e.g., example.com): " # Simplified prompt
+        read -p "$prompt_text" DOMAIN_INPUT
 
-    # Basic check for likely invalid domain characters (very permissive)
-    if [[ "$DOMAIN" =~ [^a-zA-Z0-9.-] ]]; then
-        log_warning "Warning: Domain name contains potentially invalid characters: '$DOMAIN'" >&2
-    fi
+        DOMAIN_TO_USE="$DOMAIN_INPUT" # Direct assignment, no default fallback
 
-    echo ""
-    read -p "Are you sure '$DOMAIN' is correct? (y/N): " confirm_domain
-    if [[ "$confirm_domain" =~ ^[Yy]$ ]]; then
-        break # Confirmed, exit loop
-    else
-        log_info "Please try entering the domain name again."
-    fi
-done
+        # Validate domain input
+        if [[ -z "$DOMAIN_TO_USE" ]]; then
+            log_error "Domain name cannot be empty. This field is mandatory." >&2 # Clarified error
+            continue # Ask again
+        fi
+
+        # Basic check for likely invalid domain characters (very permissive)
+        if [[ "$DOMAIN_TO_USE" =~ [^a-zA-Z0-9.-] ]]; then
+            log_warning "Warning: Domain name contains potentially invalid characters: '$DOMAIN_TO_USE'" >&2
+        fi
+
+        echo ""
+        read -p "Are you sure '$DOMAIN_TO_USE' is correct? (y/N): " confirm_domain
+        if [[ "$confirm_domain" =~ ^[Yy]$ ]]; then
+            DOMAIN="$DOMAIN_TO_USE" # Set the final DOMAIN variable
+            generated_values["USER_DOMAIN_NAME"]="$DOMAIN" # Using USER_DOMAIN_NAME
+            log_info "Domain set to '$DOMAIN'. It will be saved in .env."
+            break # Confirmed, exit loop
+        else
+            log_info "Please try entering the domain name again."
+            # No default domain suggestion to retry with.
+        fi
+    done
+fi
 
 # Prompt for user email
-echo ""
-echo "Please enter your email address. This email will be used for:"
-echo "   - Login to Flowise"
-echo "   - Login to Supabase"
-echo "   - Login to SearXNG"
-echo "   - Login to Grafana"
-echo "   - Login to Prometheus"
-echo "   - SSL certificate generation with Let's Encrypt"
+if [[ -z "${existing_env_vars[LETSENCRYPT_EMAIL]}" ]]; then
+    echo ""
+    echo "Please enter your email address. This email will be used for:"
+    echo "   - Login to Flowise"
+    echo "   - Login to Supabase"
+    echo "   - Login to SearXNG"
+    echo "   - Login to Grafana"
+    echo "   - Login to Prometheus"
+    echo "   - SSL certificate generation with Let\'s Encrypt"
+fi
 
 if [[ -n "${existing_env_vars[LETSENCRYPT_EMAIL]}" ]]; then
     USER_EMAIL="${existing_env_vars[LETSENCRYPT_EMAIL]}"
-    log_info "Using existing email from .env: $USER_EMAIL"
 else
     while true; do
         echo ""
@@ -153,16 +177,17 @@ else
 fi
 
 # Prompt for OpenAI API key (optional)
-echo ""
-echo "OpenAI API Key (optional). This key will be used for:"
-echo "   - Supabase: AI services to help with writing SQL queries, statements, and policies"
-echo "   - Crawl4AI: Default LLM configuration for web crawling capabilities"
-echo "   You can skip this by leaving it empty."
+if [[ ! -v existing_env_vars[OPENAI_API_KEY] || -z "${existing_env_vars[OPENAI_API_KEY]}" ]]; then
+    echo ""
+    echo "OpenAI API Key (optional). This key will be used for:"
+    echo "   - Supabase: AI services to help with writing SQL queries, statements, and policies"
+    echo "   - Crawl4AI: Default LLM configuration for web crawling capabilities"
+    echo "   You can skip this by leaving it empty."
+fi
 
 if [[ -v existing_env_vars[OPENAI_API_KEY] ]]; then # -v checks if variable is set (even if empty)
     OPENAI_API_KEY="${existing_env_vars[OPENAI_API_KEY]}"
-    if [[ -n "$OPENAI_API_KEY" ]]; then
-      log_info "Using existing OpenAI API Key from .env."
+    if [[ -n "$OPENAI_API_KEY" ]]; then : # Fix: Add null command for empty 'then' block
     else
       log_info "Found empty OpenAI API Key in .env. You can provide one now or leave empty."
       echo ""
@@ -173,36 +198,30 @@ else
     read -p "OpenAI API Key: " OPENAI_API_KEY
 fi
 
-# Ask if user wants to import ready-made workflow for n8n
+# Logic for n8n workflow import (RUN_N8N_IMPORT)
 echo ""
-echo "Do you want to import 300 ready-made workflows for n8n? This process may take about 30 minutes to complete."
-if [[ -n "${existing_env_vars[RUN_N8N_IMPORT]}" ]]; then
-    RUN_N8N_IMPORT="${existing_env_vars[RUN_N8N_IMPORT]}"
-    log_info "Using existing RUN_N8N_IMPORT value from .env: $RUN_N8N_IMPORT"
-else
-    echo ""
-    read -p "Import workflows? (y/n): " import_workflow
-    if [[ "$import_workflow" =~ ^[Yy]$ ]]; then
-        RUN_N8N_IMPORT="true"
-    else
-        RUN_N8N_IMPORT="false"
-    fi
-fi
 
-# Set N8N_WORKFLOWS_IMPORTED_EVER_VALUE based on RUN_N8N_IMPORT
-N8N_WORKFLOWS_IMPORTED_EVER_VALUE="$RUN_N8N_IMPORT"
+final_run_n8n_import_decision="false"
+
+echo "Do you want to import 300 ready-made workflows for n8n? This process may take about 30 minutes to complete."
+echo ""
+read -p "Import workflows? (y/n): " import_workflow_choice
+
+if [[ "$import_workflow_choice" =~ ^[Yy]$ ]]; then
+    final_run_n8n_import_decision="true"
+else
+    final_run_n8n_import_decision="false"
+fi
 
 # Prompt for number of n8n workers
 echo "" # Add a newline for better formatting
 log_info "Configuring n8n worker count..."
 if [[ -n "${existing_env_vars[N8N_WORKER_COUNT]}" ]]; then
     N8N_WORKER_COUNT_CURRENT="${existing_env_vars[N8N_WORKER_COUNT]}"
-    log_info "Found existing N8N_WORKER_COUNT in .env: $N8N_WORKER_COUNT_CURRENT"
     echo ""
     read -p "Do you want to change the number of n8n workers? Current: $N8N_WORKER_COUNT_CURRENT. (Enter new number, or press Enter to keep current): " N8N_WORKER_COUNT_INPUT_RAW
     if [[ -z "$N8N_WORKER_COUNT_INPUT_RAW" ]]; then
         N8N_WORKER_COUNT="$N8N_WORKER_COUNT_CURRENT"
-        log_info "Keeping N8N_WORKER_COUNT at $N8N_WORKER_COUNT."
     else
         # Validate the new input
         if [[ "$N8N_WORKER_COUNT_INPUT_RAW" =~ ^0*[1-9][0-9]*$ ]]; then
@@ -284,15 +303,52 @@ gen_base64() {
     openssl rand -base64 "$bytes" | head -c "$length" # Truncate just in case
 }
 
+# Function to update or add a variable to the .env file
+# Usage: _update_or_add_env_var "VAR_NAME" "var_value"
+_update_or_add_env_var() {
+    local var_name="$1"
+    local var_value="$2"
+    local tmp_env_file
+
+    tmp_env_file=$(mktemp)
+    # Ensure temp file is cleaned up if this function exits unexpectedly (though trap in main script should also cover)
+    # trap 'rm -f "$tmp_env_file"' EXIT
+
+    if [[ -f "$OUTPUT_FILE" ]]; then
+        grep -v -E "^${var_name}=" "$OUTPUT_FILE" > "$tmp_env_file" || true # Allow grep to not find anything
+    else
+        touch "$tmp_env_file" # Create empty temp if output file doesn't exist yet
+    fi
+
+    if [[ -n "$var_value" ]]; then
+        echo "${var_name}='$var_value'" >> "$tmp_env_file"
+    fi
+    mv "$tmp_env_file" "$OUTPUT_FILE"
+    # trap - EXIT # Remove specific trap for this temp file if desired, or let main script's trap handle it.
+}
+
+# Function to generate a hash using Caddy
+# Usage: local HASH=$(_generate_and_get_hash "$plain_password")
+_generate_and_get_hash() {
+    local plain_password="$1"
+    local new_hash=""
+    if [[ -n "$plain_password" ]]; then
+        new_hash=$(caddy hash-password --algorithm bcrypt --plaintext "$plain_password" 2>/dev/null)
+        if [[ $? -ne 0 || -z "$new_hash" ]]; then
+            # Optionally, log a warning here if logging was re-enabled
+            # echo "Warning: Failed to hash password for use with $1 (placeholder)" >&2
+            new_hash="" # Ensure it's empty on failure
+        fi
+    fi
+    echo "$new_hash"
+}
+
 # --- Main Logic ---
 
 if [ ! -f "$TEMPLATE_FILE" ]; then
     log_error "Template file not found at $TEMPLATE_FILE" >&2
     exit 1
 fi
-
-# Associative array to store generated values
-declare -A generated_values
 
 # Pre-populate generated_values with non-empty values from existing_env_vars
 for key_from_existing in "${!existing_env_vars[@]}"; do
@@ -305,12 +361,12 @@ done
 generated_values["FLOWISE_USERNAME"]="$USER_EMAIL"
 generated_values["DASHBOARD_USERNAME"]="$USER_EMAIL"
 generated_values["LETSENCRYPT_EMAIL"]="$USER_EMAIL"
-generated_values["RUN_N8N_IMPORT"]="$RUN_N8N_IMPORT"
+generated_values["RUN_N8N_IMPORT"]="$final_run_n8n_import_decision"
 generated_values["PROMETHEUS_USERNAME"]="$USER_EMAIL"
 generated_values["SEARXNG_USERNAME"]="$USER_EMAIL"
 generated_values["LANGFUSE_INIT_USER_EMAIL"]="$USER_EMAIL"
 generated_values["N8N_WORKER_COUNT"]="$N8N_WORKER_COUNT"
-generated_values["N8N_WORKFLOWS_IMPORTED_EVER"]="$N8N_WORKFLOWS_IMPORTED_EVER_VALUE"
+generated_values["WEAVIATE_USERNAME"]="$USER_EMAIL" # Set Weaviate username for Caddy
 if [[ -n "$OPENAI_API_KEY" ]]; then
     generated_values["OPENAI_API_KEY"]="$OPENAI_API_KEY"
 fi
@@ -331,7 +387,8 @@ found_vars["SEARXNG_USERNAME"]=0
 found_vars["OPENAI_API_KEY"]=0
 found_vars["LANGFUSE_INIT_USER_EMAIL"]=0
 found_vars["N8N_WORKER_COUNT"]=0
-found_vars["N8N_WORKFLOWS_IMPORTED_EVER"]=0
+found_vars["WEAVIATE_USERNAME"]=0
+found_vars["NEO4J_AUTH_USERNAME"]=0
 
 # Read template, substitute domain, generate initial values
 while IFS= read -r line || [[ -n "$line" ]]; do
@@ -358,6 +415,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                 hex) newValue=$(gen_hex "$length") ;;
                 langfuse_pk) newValue="pk-lf-$(gen_hex "$length")" ;;
                 langfuse_sk) newValue="sk-lf-$(gen_hex "$length")" ;;
+                fixed) newValue="$length" ;; # Handle fixed type
                 *) log_warning "Unknown generation type '$type' for $varName" ;;
             esac
 
@@ -377,7 +435,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             # This 'else' block is for lines from template not covered by existing values or VARS_TO_GENERATE.
             # Check if it is one of the user input vars - these are handled by found_vars later if not in template.
             is_user_input_var=0 # Reset for each line
-            user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "N8N_WORKFLOWS_IMPORTED_EVER")
+            user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME")
             for uivar in "${user_input_vars[@]}"; do
                 if [[ "$varName" == "$uivar" ]]; then
                     is_user_input_var=1
@@ -413,7 +471,6 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 done < "$TEMPLATE_FILE"
 
 # Generate placeholder Supabase keys (always generate these)
-log_info "Generating Supabase JWT keys..."
 
 # Function to create a JWT token
 create_jwt() {
@@ -454,18 +511,14 @@ fi
 # Generate the actual JWT tokens using the JWT_SECRET_TO_USE, if not already set
 if [[ -z "${generated_values[ANON_KEY]}" ]]; then
     generated_values["ANON_KEY"]=$(create_jwt "anon" "$JWT_SECRET_TO_USE")
-else
-    log_info "Using existing ANON_KEY."
 fi
 
 if [[ -z "${generated_values[SERVICE_ROLE_KEY]}" ]]; then
     generated_values["SERVICE_ROLE_KEY"]=$(create_jwt "service_role" "$JWT_SECRET_TO_USE")
-else
-    log_info "Using existing SERVICE_ROLE_KEY."
 fi
 
 # Add any custom variables that weren't found in the template
-for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "N8N_WORKFLOWS_IMPORTED_EVER"; do
+for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME"; do
     if [[ ${found_vars["$var"]} -eq 0 && -v generated_values["$var"] ]]; then
         # Before appending, check if it's already in TMP_ENV_FILE to avoid duplicates
         if ! grep -q -E "^${var}=" "$TMP_ENV_FILE"; then
@@ -549,36 +602,37 @@ done
 PROMETHEUS_PLAIN_PASS="${generated_values["PROMETHEUS_PASSWORD"]}"
 SEARXNG_PLAIN_PASS="${generated_values["SEARXNG_PASSWORD"]}"
 
-if [[ -n "${generated_values[PROMETHEUS_PASSWORD_HASH]}" ]]; then
-    log_info "PROMETHEUS_PASSWORD_HASH already exists. Skipping re-hashing."
-elif [[ -n "$PROMETHEUS_PLAIN_PASS" ]]; then
-    PROMETHEUS_HASH=$(caddy hash-password --algorithm bcrypt --plaintext "$PROMETHEUS_PLAIN_PASS" 2>/dev/null)
-    if [[ $? -eq 0 && -n "$PROMETHEUS_HASH" ]]; then
-        echo "PROMETHEUS_PASSWORD_HASH='$PROMETHEUS_HASH'" >> "$OUTPUT_FILE"
-        generated_values["PROMETHEUS_PASSWORD_HASH"]="$PROMETHEUS_HASH" # Store for consistency, though primarily written to file
-    else
-        log_warning "Failed to hash Prometheus password using caddy."
-    fi
-else
-    log_warning "Prometheus password was not generated or found, skipping hash."
-fi
+# --- PROMETHEUS ---
+# Try to get existing hash from memory (populated from .env if it was there)
+FINAL_PROMETHEUS_HASH="${generated_values[PROMETHEUS_PASSWORD_HASH]}"
 
-if [[ -n "${generated_values[SEARXNG_PASSWORD_HASH]}" ]]; then
-    log_info "SEARXNG_PASSWORD_HASH already exists. Skipping re-hashing."
-elif [[ -n "$SEARXNG_PLAIN_PASS" ]]; then
-    SEARXNG_HASH=$(caddy hash-password --algorithm bcrypt --plaintext "$SEARXNG_PLAIN_PASS" 2>/dev/null)
-    if [[ $? -eq 0 && -n "$SEARXNG_HASH" ]]; then
-        echo "SEARXNG_PASSWORD_HASH='$SEARXNG_HASH'" >> "$OUTPUT_FILE"
-        generated_values["SEARXNG_PASSWORD_HASH"]="$SEARXNG_HASH"
-    else
-        log_warning "Failed to hash SearXNG password using caddy."
+# If no hash in memory, but we have a plain password, generate a new hash
+if [[ -z "$FINAL_PROMETHEUS_HASH" && -n "$PROMETHEUS_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$PROMETHEUS_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_PROMETHEUS_HASH="$NEW_HASH"
+        generated_values["PROMETHEUS_PASSWORD_HASH"]="$NEW_HASH" # Update memory for consistency
     fi
-else
-    log_warning "SearXNG password was not generated or found, skipping hash."
 fi
+# Update the .env file with the final determined hash (could be empty if no plain pass or hash failed)
+_update_or_add_env_var "PROMETHEUS_PASSWORD_HASH" "$FINAL_PROMETHEUS_HASH"
 
-if [ $? -eq 0 ]; then
-    log_success ".env file generated successfully in the project root ($OUTPUT_FILE)."
+# --- SEARXNG ---
+FINAL_SEARXNG_HASH="${generated_values[SEARXNG_PASSWORD_HASH]}"
+
+if [[ -z "$FINAL_SEARXNG_HASH" && -n "$SEARXNG_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$SEARXNG_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_SEARXNG_HASH="$NEW_HASH"
+        generated_values["SEARXNG_PASSWORD_HASH"]="$NEW_HASH"
+    fi
+fi
+_update_or_add_env_var "SEARXNG_PASSWORD_HASH" "$FINAL_SEARXNG_HASH"
+
+
+if [ $? -eq 0 ]; then # This $? reflects the status of the last mv command from the last _update_or_add_env_var call.
+    # For now, assuming if we reached here and mv was fine, primary operations were okay.
+    echo ".env file generated successfully in the project root ($OUTPUT_FILE)."
 else
     log_error "Failed to generate .env file." >&2
     rm -f "$OUTPUT_FILE" # Clean up potentially broken output file

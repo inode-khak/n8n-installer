@@ -53,9 +53,11 @@ base_services_data=(
     "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
     "flowise" "Flowise (AI Agent Builder)"
     "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
+    "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
     "qdrant" "Qdrant (Vector Database)"
     "supabase" "Supabase (Backend as a Service)"
-    "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
+    "weaviate" "Weaviate (Vector Database with API Key Auth)"
+    "neo4j" "Neo4j (Graph Database)"
     "open-webui" "Open WebUI (ChatGPT-like Interface)"
     "searxng" "SearXNG (Private Metasearch Engine)"
     "crawl4ai" "Crawl4ai (Web Crawler for AI)"
@@ -226,7 +228,6 @@ fi
 
 # Add the new COMPOSE_PROFILES line
 echo "COMPOSE_PROFILES=${COMPOSE_PROFILES_VALUE}" >> "$ENV_FILE"
-log_info "COMPOSE_PROFILES has been set in '$ENV_FILE'."
 if [ -z "$COMPOSE_PROFILES_VALUE" ]; then
     log_info "Only core services (Caddy, Postgres, Redis) will be started."
 else

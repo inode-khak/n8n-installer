@@ -42,6 +42,10 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**Letta**](https://docs.letta.com/) - An open-source agent server and SDK that can be connected to various LLM API backends (OpenAI, Anthropic, Ollama, etc.), enabling you to build and manage AI agents.
 
+✅ [**Weaviate**](https://weaviate.io/) - An open-source AI-native vector database with a focus on scalability and ease of use. It can be used for RAG, hybrid search, and more.
+
+✅ [**Neo4j**](https://neo4j.com/) - A graph database management system that allows you to model, store, and query data as a network of nodes and relationships.
+
 ✅ [**Ollama**](https://ollama.com/) - Run Llama 3, Mistral, Gemma, and other large language models locally.
 
 ✅ [**Prometheus**](https://prometheus.io/) - An open-source monitoring and alerting toolkit to keep an eye on system health.
@@ -106,19 +110,47 @@ Upon successful completion, the script will display a summary report. This repor
 
 ## ⚡️ Quick Start and Usage
 
-The services will be available at the following addresses (replace `yourdomain.com` with your actual domain):
+After successful installation, your services are up and running! Here's how to get started:
 
-- **n8n:** `n8n.yourdomain.com`
-- **Open WebUI:** `webui.yourdomain.com`
-- **Flowise:** `flowise.yourdomain.com`
-- **Supabase (Dashboard):** `supabase.yourdomain.com`
-- **Langfuse:** `langfuse.yourdomain.com`
-- **Letta:** `letta.yourdomain.com`
-- **Grafana:** `grafana.yourdomain.com`
-- **SearXNG:** `searxng.yourdomain.com`
-- **Prometheus:** `prometheus.yourdomain.com`
+1.  **Access Your Services:**
+    The installation script provided a summary report with all access URLs and credentials. Please refer to that report. The main services will be available at the following addresses (replace `yourdomain.com` with your actual domain):
 
-With your n8n instance, you'll have access to over 400 integrations and powerful AI tools to build automated workflows. You can connect n8n to Qdrant or Supabase to store and retrieve information for your AI tasks. If you wish to use large language models (LLMs), you can easily configure them within n8n, assuming you have access to an LLM service.
+    - **n8n:** `n8n.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report. You may be prompted to change this password on first login.)
+    - **Open WebUI:** `webui.yourdomain.com`
+    - **Flowise:** `flowise.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report.)
+    - **Supabase (Dashboard):** `supabase.yourdomain.com`
+    - **Langfuse:** `langfuse.yourdomain.com`
+    - **Letta:** `letta.yourdomain.com`
+    - **Weaviate:** `weaviate.yourdomain.com`
+    - **Neo4j:** `neo4j.yourdomain.com`
+    - **Grafana:** `grafana.yourdomain.com`
+    - **SearXNG:** `searxng.yourdomain.com`
+    - **Prometheus:** `prometheus.yourdomain.com` (Typically used as a data source for Grafana)
+
+2.  **Explore n8n:**
+
+    - Log in to your n8n instance. This is your central hub for workflow automation.
+    - If you chose to import the community workflows during installation, you'll find over 300 examples in your "Workflows" section. These are a great way to learn and get ideas.
+    - Start building your first workflow! You have access to over 400 integrations and powerful AI tools.
+
+3.  **Utilize Integrated AI Tools:**
+
+    - **Connect n8n with Vector Stores:** Use n8n to connect to Qdrant (accessible via its own endpoint if needed, typically `qdrant.yourdomain.com`), Supabase, or Weaviate (`weaviate.yourdomain.com`) to store and retrieve information for your AI tasks like Retrieval Augmented Generation (RAG).
+    - **Build with Flowise:** Access Flowise at `flowise.yourdomain.com` to create AI agents and applications. You can trigger Flowise agents from n8n or vice-versa.
+    - **Interact with Open WebUI:** Use Open WebUI at `webui.yourdomain.com` as a chat interface for your local AI models or n8n agents (e.g., using the n8n_pipe integration if configured).
+    - **Configure LLMs:** If you wish to use large language models (LLMs) from providers like OpenAI, Anthropic, or locally via Ollama (if installed), you can easily configure credentials and connections within n8n nodes or in services like Flowise and Open WebUI.
+
+4.  **Check Monitoring (Optional):**
+    - Visit Grafana (`grafana.yourdomain.com`) to see dashboards monitoring your system's performance (data sourced from Prometheus).
+
+### Using Pre-installed Libraries in n8n's Custom JavaScript
+
+This setup pre-installs useful Node.js libraries for use in n8n's Code nodes, allowing you to write custom JavaScript snippets with enhanced capabilities:
+
+- **`cheerio`**: For parsing and manipulating HTML/XML (e.g., web scraping).
+- **`axios`**: A promise-based HTTP client for making requests to external APIs.
+- **`moment`**: For parsing, validating, manipulating, and displaying dates/times.
+- **`lodash`**: A utility library for common programming tasks (arrays, objects, strings, etc.).
 
 ## Upgrading
 
@@ -213,6 +245,10 @@ When you build automations in n8n that need to read or write files on your serve
 - [Read/Write Files from Disk](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.filesreadwrite/)
 - [Local File Trigger](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.localfiletrigger/) (To start workflows when files change)
 - [Execute Command](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.executecommand/) (To run command-line tools)
+
+## 🙌 Contributors
+
+Want to see who has contributed to this project? Check out the [**GitHub Contributors Page**](https://github.com/kossakovsky/n8n-installer/graphs/contributors)!
 
 ## 📜 License
 
