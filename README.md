@@ -172,7 +172,7 @@ This script will:
 
 ## Important Links
 
-- Based on a project by [kossakovsky]https://github.com/kossakovsky/n8n-installer and [coleam00](https://github.com/coleam00/local-ai-packaged)
+- Based on a project by [kossakovsky](https://github.com/kossakovsky/n8n-installer) and [coleam00](https://github.com/coleam00/local-ai-packaged)
 - [Original Starter Kit](https://github.com/n8n-io/self-hosted-ai-starter-kit) by the n8n team
 - [Community forum](https://thinktank.ottomator.ai/c/local-ai/18) over in the oTTomator Think Tank for discussions and support.
 - [GitHub Kanban board](https://github.com/users/coleam00/projects/2/views/1) for tracking new features and bug fixes.
