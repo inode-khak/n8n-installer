@@ -114,24 +114,11 @@ Upon successful completion, the script will display a summary report. This repor
 
 After successful installation, your services are up and running! Here's how to get started:
 
-<<<<<<< HEAD
 1.  **Access Your Services:**
     The installation script provided a summary report with all access URLs and credentials. Please refer to that report. The main services will be available at the following addresses (replace `yourdomain.com` with your actual domain):
-=======
-- **n8n:** `n8n.yourdomain.com`
-- **Open WebUI:** `webui.yourdomain.com`
-- **LiteLLM** `litellm.yourdomain.com`
-- **Flowise:** `flowise.yourdomain.com`
-- **Supabase (Dashboard):** `supabase.yourdomain.com`
-- **Langfuse:** `langfuse.yourdomain.com`
-- **Letta:** `letta.yourdomain.com`
-- **Grafana:** `grafana.yourdomain.com`
-- **SearXNG:** `searxng.yourdomain.com`
-- **Prometheus:** `prometheus.yourdomain.com`
->>>>>>> 7a52cbd (README updated)
-
     - **n8n:** `n8n.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report. You may be prompted to change this password on first login.)
     - **Open WebUI:** `webui.yourdomain.com`
+    - **LiteLLM** `litellm.yourdomain.com`
     - **Flowise:** `flowise.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report.)
     - **Supabase (Dashboard):** `supabase.yourdomain.com`
     - **Langfuse:** `langfuse.yourdomain.com`
