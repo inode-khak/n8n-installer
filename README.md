@@ -28,6 +28,8 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**Open WebUI**](https://openwebui.com/) - A user-friendly, ChatGPT-like interface to interact privately with your AI models and n8n agents.
 
+✅ [**LiteLLM**](https://www.litellm.ai/) – A lightweight proxy service that enables integration and management of multiple large language models (LLMs). Easily extend the range of available LLMs for tools like Open WebUI.
+
 ✅ [**Flowise**](https://flowiseai.com/) - A no-code/low-code AI agent builder that complements n8n perfectly, allowing you to create sophisticated AI applications with ease.
 
 ✅ [**Qdrant**](https://qdrant.tech/) - A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
@@ -112,8 +114,21 @@ Upon successful completion, the script will display a summary report. This repor
 
 After successful installation, your services are up and running! Here's how to get started:
 
+<<<<<<< HEAD
 1.  **Access Your Services:**
     The installation script provided a summary report with all access URLs and credentials. Please refer to that report. The main services will be available at the following addresses (replace `yourdomain.com` with your actual domain):
+=======
+- **n8n:** `n8n.yourdomain.com`
+- **Open WebUI:** `webui.yourdomain.com`
+- **LiteLLM** `litellm.yourdomain.com`
+- **Flowise:** `flowise.yourdomain.com`
+- **Supabase (Dashboard):** `supabase.yourdomain.com`
+- **Langfuse:** `langfuse.yourdomain.com`
+- **Letta:** `letta.yourdomain.com`
+- **Grafana:** `grafana.yourdomain.com`
+- **SearXNG:** `searxng.yourdomain.com`
+- **Prometheus:** `prometheus.yourdomain.com`
+>>>>>>> 7a52cbd (README updated)
 
     - **n8n:** `n8n.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report. You may be prompted to change this password on first login.)
     - **Open WebUI:** `webui.yourdomain.com`
@@ -170,7 +185,7 @@ This script will:
 
 ## Important Links
 
-- Based on a project by [coleam00](https://github.com/coleam00/local-ai-packaged)
+- Based on a project by [kossakovsky]https://github.com/kossakovsky/n8n-installer and [coleam00](https://github.com/coleam00/local-ai-packaged)
 - [Original Starter Kit](https://github.com/n8n-io/self-hosted-ai-starter-kit) by the n8n team
 - [Community forum](https://thinktank.ottomator.ai/c/local-ai/18) over in the oTTomator Think Tank for discussions and support.
 - [GitHub Kanban board](https://github.com/users/coleam00/projects/2/views/1) for tracking new features and bug fixes.

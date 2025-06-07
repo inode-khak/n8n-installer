@@ -59,6 +59,7 @@ base_services_data=(
     "weaviate" "Weaviate (Vector Database with API Key Auth)"
     "neo4j" "Neo4j (Graph Database)"
     "open-webui" "Open WebUI (ChatGPT-like Interface)"
+    "litellm" "LLM Proxy Service"
     "searxng" "SearXNG (Private Metasearch Engine)"
     "crawl4ai" "Crawl4ai (Web Crawler for AI)"
     "letta" "Letta (Agent Server & SDK)"
