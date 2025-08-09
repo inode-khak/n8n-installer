@@ -81,6 +81,19 @@ if is_profile_active "litellm"; then
   echo "Internal Access (e.g., from OpenWebUI): http://litellm:4000"
 fi
 
+if is_profile_active "dify"; then
+  echo
+  echo "================================= Dify ================================="
+  echo
+  echo "Host: ${DIFY_HOSTNAME:-<hostname_not_set>}"
+  echo "Description: AI Application Development Platform with LLMOps"
+  echo
+  echo "API Access:"
+  echo "  - Web Interface: https://${DIFY_HOSTNAME:-<hostname_not_set>}"
+  echo "  - API Endpoint: https://${DIFY_HOSTNAME:-<hostname_not_set>}/v1"
+  echo "  - Internal API: http://dify-api:5001"
+fi
+
 if is_profile_active "supabase"; then
   echo
   echo "================================= Supabase ============================"
@@ -126,12 +139,30 @@ if is_profile_active "searxng"; then
   echo "Password: ${SEARXNG_PASSWORD:-<not_set_in_env>}"
 fi
 
+if is_profile_active "portainer"; then
+  echo
+  echo "================================= Portainer ==========================="
+  echo
+  echo "Host: ${PORTAINER_HOSTNAME:-<hostname_not_set>}"
+  echo "(Note: On first login, Portainer will prompt to set up an admin user.)"
+fi
+
+if is_profile_active "comfyui"; then
+  echo
+  echo "================================= ComfyUI ============================="
+  echo
+  echo "Host: ${COMFYUI_HOSTNAME:-<hostname_not_set>}"
+  echo "User: ${COMFYUI_USERNAME:-<not_set_in_env>}"
+  echo "Password: ${COMFYUI_PASSWORD:-<not_set_in_env>}"
+fi
+
 if is_profile_active "qdrant"; then
   echo
   echo "================================= Qdrant =============================="
   echo
+  echo "Host: https://${QDRANT_HOSTNAME:-<hostname_not_set>}"
+  echo "API Key: ${QDRANT_API_KEY:-<not_set_in_env>}"
   echo "Internal REST API Access (e.g., from backend): http://qdrant:6333"
-  echo "(Note: Not exposed externally via Caddy by default)"
 fi
 
 if is_profile_active "crawl4ai"; then
@@ -140,6 +171,20 @@ if is_profile_active "crawl4ai"; then
   echo
   echo "Internal Access (e.g., from n8n): http://crawl4ai:11235"
   echo "(Note: Not exposed externally via Caddy by default)"
+fi
+
+if is_profile_active "gotenberg"; then
+  echo
+  echo "================================= Gotenberg ============================"
+  echo
+  echo "Internal Access (e.g., from n8n): http://gotenberg:3000"
+  echo "API Documentation: https://gotenberg.dev/docs"
+  echo
+  echo "Common API Endpoints:"
+  echo "  HTML to PDF: POST /forms/chromium/convert/html"
+  echo "  URL to PDF: POST /forms/chromium/convert/url"
+  echo "  Markdown to PDF: POST /forms/chromium/convert/markdown"
+  echo "  Office to PDF: POST /forms/libreoffice/convert"
 fi
 
 if is_profile_active "n8n" || is_profile_active "langfuse"; then

@@ -23,15 +23,23 @@
 
 # LiteLLM
 {$LITELLM_HOSTNAME} {
-    # For domains, Caddy will automatically use Let's Encrypt
-    # For localhost/port addresses, HTTPS won't be enabled
     reverse_proxy litellm:4000
+}
+
+# Dify
+{$DIFY_HOSTNAME} {
+    reverse_proxy nginx:80
 }
 
 # Langfuse
 {$LANGFUSE_HOSTNAME} {
     reverse_proxy langfuse-web:3000
 }
+
+# # Ollama API
+# {$OLLAMA_HOSTNAME} {
+#     reverse_proxy ollama:11434
+# }
 
 # Supabase
 {$SUPABASE_HOSTNAME} {
@@ -51,6 +59,11 @@
     reverse_proxy prometheus:9090
 }
 
+# Portainer
+{$PORTAINER_HOSTNAME} {
+    reverse_proxy portainer:9000
+}
+
 # Letta
 {$LETTA_HOSTNAME} {
     reverse_proxy letta:8283
@@ -59,6 +72,19 @@
 # Weaviate
 {$WEAVIATE_HOSTNAME} {
     reverse_proxy weaviate:8080
+}
+
+# Qdrant
+{$QDRANT_HOSTNAME} {
+    reverse_proxy qdrant:6333
+}
+
+# ComfyUI
+{$COMFYUI_HOSTNAME} {
+    basic_auth {
+        {$COMFYUI_USERNAME} {$COMFYUI_PASSWORD_HASH}
+    }
+    reverse_proxy comfyui:8188
 }
 
 # Neo4j
@@ -71,11 +97,16 @@ https://{$NEO4J_HOSTNAME}:7687 {
     reverse_proxy neo4j:7687
 }
 
-# SearXNG
+import /etc/caddy/addons/*.conf
+
+# # SearXNG
 {$SEARXNG_HOSTNAME} {
-    basic_auth { 
+    @protected not remote_ip 127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 100.64.0.0/10
+
+    basic_auth @protected {
         {$SEARXNG_USERNAME} {$SEARXNG_PASSWORD_HASH}
     }
+
     encode zstd gzip
     
     @api {

@@ -51,19 +51,23 @@ current_profiles_for_matching=",$CURRENT_PROFILES_VALUE,"
 # Base service definitions (tag, description)
 base_services_data=(
     "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
+    "dify" "Dify (AI Application Development Platform with LLMOps)"
     "flowise" "Flowise (AI Agent Builder)"
     "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
+    "portainer" "Portainer (Docker management UI)"
     "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
     "qdrant" "Qdrant (Vector Database)"
     "supabase" "Supabase (Backend as a Service)"
     "weaviate" "Weaviate (Vector Database with API Key Auth)"
     "neo4j" "Neo4j (Graph Database)"
+    "letta" "Letta (Agent Server & SDK)"
+    "gotenberg" "Gotenberg (Document Conversion API)"
+    "crawl4ai" "Crawl4ai (Web Crawler for AI)"
     "open-webui" "Open WebUI (ChatGPT-like Interface)"
     "litellm" "LLM Proxy Service"
     "searxng" "SearXNG (Private Metasearch Engine)"
-    "crawl4ai" "Crawl4ai (Web Crawler for AI)"
-    "letta" "Letta (Agent Server & SDK)"
     "ollama" "Ollama (Local LLM Runner - select hardware in next step)"
+    "comfyui" "ComfyUI (Node-based Stable Diffusion UI)"
 )
 
 services=() # This will be the final array for whiptail
@@ -98,7 +102,7 @@ done
 
 # Use whiptail to display the checklist
 CHOICES=$(whiptail --title "Service Selection Wizard" --checklist \
-  "Choose the services you want to deploy.\nUse ARROW KEYS to navigate, SPACEBAR to select/deselect, ENTER to confirm." 22 78 10 \
+  "Choose the services you want to deploy.\nUse ARROW KEYS to navigate, SPACEBAR to select/deselect, ENTER to confirm." 32 90 17 \
   "${services[@]}" \
   3>&1 1>&2 2>&3)
 

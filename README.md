@@ -32,11 +32,17 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**Flowise**](https://flowiseai.com/) - A no-code/low-code AI agent builder that complements n8n perfectly, allowing you to create sophisticated AI applications with ease.
 
+✅ [**ComfyUI**](https://github.com/comfyanonymous/ComfyUI) - A powerful, node-based UI for Stable Diffusion workflows. Build and run image-generation pipelines visually, with support for custom nodes and extensions.
+
+✅ [**Dify**](https://dify.ai/) - An open-source AI application development platform that provides comprehensive LLMOps capabilities, including workflow management, prompt engineering, RAG pipelines, and AI agent orchestration. Perfect for building production-ready AI applications.
+
 ✅ [**Qdrant**](https://qdrant.tech/) - A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
 
 ✅ [**SearXNG**](https://searxng.org/) - A free, open-source internet metasearch engine. It aggregates results from numerous search services without tracking or profiling you, ensuring your privacy.
 
 ✅ [**Caddy**](https://caddyserver.com/) - A powerful web server that automatically handles HTTPS/TLS for your custom domains, keeping your connections secure.
+
+✅ [**Gotenberg**](https://gotenberg.dev/) - A stateless API for converting HTML, Markdown, Word, Excel, and other documents to PDF, PNG, or JPEG. Available only within the Docker network for internal use by n8n workflows and other services.
 
 ✅ [**Langfuse**](https://langfuse.com/) - An open-source platform to help you observe and understand how your AI agents are performing, making it easier to debug and improve them.
 
@@ -53,6 +59,8 @@ The installer also makes the following powerful open-source tools **available fo
 ✅ [**Prometheus**](https://prometheus.io/) - An open-source monitoring and alerting toolkit to keep an eye on system health.
 
 ✅ [**Grafana**](https://grafana.com/) - An open-source platform for visualizing monitoring data, helping you understand system performance at a glance.
+
+✅ [**Portainer**](https://www.portainer.io/) - A lightweight, secure web UI to manage your Docker environment (containers, images, volumes, networks) with ease.
 
 ### Included Community Workflows
 
@@ -120,6 +128,7 @@ After successful installation, your services are up and running! Here's how to g
     - **Open WebUI:** `webui.yourdomain.com`
     - **LiteLLM** `litellm.yourdomain.com`
     - **Flowise:** `flowise.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report.)
+    - **Dify:** `dify.yourdomain.com` (AI application development platform with comprehensive LLMOps capabilities)
     - **Supabase (Dashboard):** `supabase.yourdomain.com`
     - **Langfuse:** `langfuse.yourdomain.com`
     - **Letta:** `letta.yourdomain.com`
@@ -128,6 +137,8 @@ After successful installation, your services are up and running! Here's how to g
     - **Grafana:** `grafana.yourdomain.com`
     - **SearXNG:** `searxng.yourdomain.com`
     - **Prometheus:** `prometheus.yourdomain.com` (Typically used as a data source for Grafana)
+    - **Portainer:** `portainer.yourdomain.com` (Protected by Caddy basic auth; on first login, complete Portainer admin setup)
+    - **ComfyUI:** `comfyui.yourdomain.com` (Node-based Stable Diffusion UI)
 
 2.  **Explore n8n:**
 
@@ -169,6 +180,16 @@ This script will:
 3.  Download the latest versions of the Docker images for all services.
 4.  Ask if you want to re-run the n8n workflow import (useful if you skipped this during the initial installation or want to refresh the community workflows).
 5.  Restart all services with the new updates.
+
+## Cleaning up Docker
+
+If you need to free up disk space, you can run the Docker cleanup script. This script removes all unused Docker containers, images, and volumes.
+
+```bash
+sudo bash ./scripts/docker_cleanup.sh
+```
+
+This can be useful for removing old images and freeing up space, but be aware that it will remove all unused data.
 
 ## Important Links
 
