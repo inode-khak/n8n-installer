@@ -42,6 +42,8 @@ The installer also makes the following powerful open-source tools **available fo
 
 ✅ [**Letta**](https://docs.letta.com/) - An open-source agent server and SDK that can be connected to various LLM API backends (OpenAI, Anthropic, Ollama, etc.), enabling you to build and manage AI agents.
 
+✅ [**LiteLLM**](https://www.litellm.ai/) - A lightweight proxy service that enables integration and management of multiple large language models (LLMs). Easily extend the range of available LLMs for tools like Open WebUI.
+
 ✅ [**LibreTranslate**](https://docs.libretranslate.com/) - Self-hosted translation API (50+ languages).
 
 ✅ [**Neo4j**](https://neo4j.com/) - A graph database management system that allows you to model, store, and query data as a network of nodes and relationships.
@@ -139,6 +141,7 @@ After successful installation, your services are up and running! Here's how to g
     - **Grafana:** `grafana.yourdomain.com`
     - **Langfuse:** `langfuse.yourdomain.com`
     - **Letta:** `letta.yourdomain.com`
+    - **LiteLLM:** `litellm.yourdomain.com`
     - **LibreTranslate:** `translate.yourdomain.com`
     - **Neo4j:** `neo4j.yourdomain.com`
     - **Open WebUI:** `webui.yourdomain.com`
