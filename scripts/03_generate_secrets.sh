@@ -54,6 +54,9 @@ declare -A VARS_TO_GENERATE=(
     # Dify environment variables
     ["DIFY_SECRET_KEY"]="secret:64" # Dify application secret key (maps to SECRET_KEY in Dify)
     ["COMFYUI_PASSWORD"]="password:32" # Added ComfyUI basic auth password
+    ["RAGAPP_PASSWORD"]="password:32" # Added RAGApp basic auth password
+    ["PADDLEOCR_PASSWORD"]="password:32" # Added PaddleOCR basic auth password
+    ["LT_PASSWORD"]="password:32" # Added LibreTranslate basic auth password
 )
 
 # Initialize existing_env_vars and attempt to read .env if it exists
@@ -180,101 +183,7 @@ else
     done
 fi
 
-# Prompt for OpenAI API key (optional)
-if [[ ! -v existing_env_vars[OPENAI_API_KEY] || -z "${existing_env_vars[OPENAI_API_KEY]}" ]]; then
-    echo ""
-    echo "OpenAI API Key (optional). This key will be used for:"
-    echo "   - Supabase: AI services to help with writing SQL queries, statements, and policies"
-    echo "   - Crawl4AI: Default LLM configuration for web crawling capabilities"
-    echo "   You can skip this by leaving it empty."
-fi
 
-if [[ -v existing_env_vars[OPENAI_API_KEY] ]]; then # -v checks if variable is set (even if empty)
-    OPENAI_API_KEY="${existing_env_vars[OPENAI_API_KEY]}"
-    if [[ -n "$OPENAI_API_KEY" ]]; then : # Fix: Add null command for empty 'then' block
-    else
-      log_info "Found empty OpenAI API Key in .env. You can provide one now or leave empty."
-      echo ""
-      read -p "OpenAI API Key: " OPENAI_API_KEY # Allow update if it was empty
-    fi
-else
-    echo ""
-    read -p "OpenAI API Key: " OPENAI_API_KEY
-fi
-
-# Logic for n8n workflow import (RUN_N8N_IMPORT)
-echo ""
-
-final_run_n8n_import_decision="false"
-
-echo "Do you want to import 300 ready-made workflows for n8n? This process may take about 30 minutes to complete."
-echo ""
-read -p "Import workflows? (y/n): " import_workflow_choice
-
-if [[ "$import_workflow_choice" =~ ^[Yy]$ ]]; then
-    final_run_n8n_import_decision="true"
-else
-    final_run_n8n_import_decision="false"
-fi
-
-# Prompt for number of n8n workers
-echo "" # Add a newline for better formatting
-log_info "Configuring n8n worker count..."
-if [[ -n "${existing_env_vars[N8N_WORKER_COUNT]}" ]]; then
-    N8N_WORKER_COUNT_CURRENT="${existing_env_vars[N8N_WORKER_COUNT]}"
-    echo ""
-    read -p "Do you want to change the number of n8n workers? Current: $N8N_WORKER_COUNT_CURRENT. (Enter new number, or press Enter to keep current): " N8N_WORKER_COUNT_INPUT_RAW
-    if [[ -z "$N8N_WORKER_COUNT_INPUT_RAW" ]]; then
-        N8N_WORKER_COUNT="$N8N_WORKER_COUNT_CURRENT"
-    else
-        # Validate the new input
-        if [[ "$N8N_WORKER_COUNT_INPUT_RAW" =~ ^0*[1-9][0-9]*$ ]]; then
-            N8N_WORKER_COUNT_TEMP="$((10#$N8N_WORKER_COUNT_INPUT_RAW))" # Sanitize (e.g. 01 -> 1)
-            if [[ "$N8N_WORKER_COUNT_TEMP" -ge 1 ]]; then
-                 echo ""
-                 read -p "Update n8n workers to $N8N_WORKER_COUNT_TEMP? (y/N): " confirm_change
-                 if [[ "$confirm_change" =~ ^[Yy]$ ]]; then
-                    N8N_WORKER_COUNT="$N8N_WORKER_COUNT_TEMP"
-                 else
-                    N8N_WORKER_COUNT="$N8N_WORKER_COUNT_CURRENT"
-                    log_info "Change declined. Keeping N8N_WORKER_COUNT at $N8N_WORKER_COUNT."
-                 fi
-            else # Should not happen with regex but as a safeguard
-                log_warning "Invalid input '$N8N_WORKER_COUNT_INPUT_RAW'. Number must be positive. Keeping $N8N_WORKER_COUNT_CURRENT."
-                N8N_WORKER_COUNT="$N8N_WORKER_COUNT_CURRENT"
-            fi
-        else
-            log_warning "Invalid input '$N8N_WORKER_COUNT_INPUT_RAW'. Please enter a positive integer. Keeping $N8N_WORKER_COUNT_CURRENT."
-            N8N_WORKER_COUNT="$N8N_WORKER_COUNT_CURRENT"
-        fi
-    fi
-else
-    while true; do
-        echo ""
-        read -p "Enter the number of n8n workers to run (e.g., 1, 2, 3; default is 1): " N8N_WORKER_COUNT_INPUT_RAW
-        N8N_WORKER_COUNT_CANDIDATE="${N8N_WORKER_COUNT_INPUT_RAW:-1}" # Default to 1 if empty
-
-        if [[ "$N8N_WORKER_COUNT_CANDIDATE" =~ ^0*[1-9][0-9]*$ ]]; then
-            N8N_WORKER_COUNT_VALIDATED="$((10#$N8N_WORKER_COUNT_CANDIDATE))"
-            if [[ "$N8N_WORKER_COUNT_VALIDATED" -ge 1 ]]; then
-                echo ""
-                read -p "Run $N8N_WORKER_COUNT_VALIDATED n8n worker(s)? (y/N): " confirm_workers
-                if [[ "$confirm_workers" =~ ^[Yy]$ ]]; then
-                    N8N_WORKER_COUNT="$N8N_WORKER_COUNT_VALIDATED"
-                    break
-                else
-                    log_info "Please try entering the number of workers again."
-                fi
-            else # Should not be reached if regex is correct
-                log_error "Number of workers must be a positive integer." >&2
-            fi
-        else
-            log_error "Invalid input '$N8N_WORKER_COUNT_CANDIDATE'. Please enter a positive integer (e.g., 1, 2)." >&2
-        fi
-    done
-fi
-# Ensure N8N_WORKER_COUNT is definitely set (should be by logic above)
-N8N_WORKER_COUNT="${N8N_WORKER_COUNT:-1}"
 
 log_info "Generating secrets and creating .env file..."
 
@@ -365,17 +274,15 @@ done
 generated_values["FLOWISE_USERNAME"]="$USER_EMAIL"
 generated_values["DASHBOARD_USERNAME"]="$USER_EMAIL"
 generated_values["LETSENCRYPT_EMAIL"]="$USER_EMAIL"
-generated_values["RUN_N8N_IMPORT"]="$final_run_n8n_import_decision"
 generated_values["PROMETHEUS_USERNAME"]="$USER_EMAIL"
 generated_values["SEARXNG_USERNAME"]="$USER_EMAIL"
 generated_values["LANGFUSE_INIT_USER_EMAIL"]="$USER_EMAIL"
-generated_values["N8N_WORKER_COUNT"]="$N8N_WORKER_COUNT"
 generated_values["WEAVIATE_USERNAME"]="$USER_EMAIL" # Set Weaviate username for Caddy
 generated_values["COMFYUI_USERNAME"]="$USER_EMAIL" # Set ComfyUI username for Caddy
+generated_values["RAGAPP_USERNAME"]="$USER_EMAIL" # Set RAGApp username for Caddy
+generated_values["PADDLEOCR_USERNAME"]="$USER_EMAIL" # Set PaddleOCR username for Caddy
+generated_values["LT_USERNAME"]="$USER_EMAIL" # Set LibreTranslate username for Caddy
 
-if [[ -n "$OPENAI_API_KEY" ]]; then
-    generated_values["OPENAI_API_KEY"]="$OPENAI_API_KEY"
-fi
 
 # Create a temporary file for processing
 TMP_ENV_FILE=$(mktemp)
@@ -396,6 +303,9 @@ found_vars["N8N_WORKER_COUNT"]=0
 found_vars["WEAVIATE_USERNAME"]=0
 found_vars["NEO4J_AUTH_USERNAME"]=0
 found_vars["COMFYUI_USERNAME"]=0
+found_vars["RAGAPP_USERNAME"]=0
+found_vars["PADDLEOCR_USERNAME"]=0
+found_vars["LT_USERNAME"]=0
 
 # Read template, substitute domain, generate initial values
 while IFS= read -r line || [[ -n "$line" ]]; do
@@ -442,7 +352,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             # This 'else' block is for lines from template not covered by existing values or VARS_TO_GENERATE.
             # Check if it is one of the user input vars - these are handled by found_vars later if not in template.
             is_user_input_var=0 # Reset for each line
-            user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME")
+            user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME")
             for uivar in "${user_input_vars[@]}"; do
                 if [[ "$varName" == "$uivar" ]]; then
                     is_user_input_var=1
@@ -524,7 +434,7 @@ if [[ -z "${generated_values[SERVICE_ROLE_KEY]}" ]]; then
 fi
 
 # Add any custom variables that weren't found in the template
-for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME"; do
+for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME"; do
     if [[ ${found_vars["$var"]} -eq 0 && -v generated_values["$var"] ]]; then
         # Before appending, check if it's already in TMP_ENV_FILE to avoid duplicates
         if ! grep -q -E "^${var}=" "$TMP_ENV_FILE"; then
@@ -647,6 +557,41 @@ if [[ -z "$FINAL_COMFYUI_HASH" && -n "$COMFYUI_PLAIN_PASS" ]]; then
 fi
 _update_or_add_env_var "COMFYUI_PASSWORD_HASH" "$FINAL_COMFYUI_HASH"
 
+# --- PADDLEOCR ---
+PADDLEOCR_PLAIN_PASS="${generated_values["PADDLEOCR_PASSWORD"]}"
+FINAL_PADDLEOCR_HASH="${generated_values[PADDLEOCR_PASSWORD_HASH]}"
+if [[ -z "$FINAL_PADDLEOCR_HASH" && -n "$PADDLEOCR_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$PADDLEOCR_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_PADDLEOCR_HASH="$NEW_HASH"
+        generated_values["PADDLEOCR_PASSWORD_HASH"]="$NEW_HASH"
+    fi
+fi
+_update_or_add_env_var "PADDLEOCR_PASSWORD_HASH" "$FINAL_PADDLEOCR_HASH"
+
+# --- RAGAPP ---
+RAGAPP_PLAIN_PASS="${generated_values["RAGAPP_PASSWORD"]}"
+FINAL_RAGAPP_HASH="${generated_values[RAGAPP_PASSWORD_HASH]}"
+if [[ -z "$FINAL_RAGAPP_HASH" && -n "$RAGAPP_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$RAGAPP_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_RAGAPP_HASH="$NEW_HASH"
+        generated_values["RAGAPP_PASSWORD_HASH"]="$NEW_HASH"
+    fi
+fi
+_update_or_add_env_var "RAGAPP_PASSWORD_HASH" "$FINAL_RAGAPP_HASH"
+
+# --- LIBRETRANSLATE ---
+LT_PLAIN_PASS="${generated_values["LT_PASSWORD"]}"
+FINAL_LT_HASH="${generated_values[LT_PASSWORD_HASH]}"
+if [[ -z "$FINAL_LT_HASH" && -n "$LT_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$LT_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_LT_HASH="$NEW_HASH"
+        generated_values["LT_PASSWORD_HASH"]="$NEW_HASH"
+    fi
+fi
+_update_or_add_env_var "LT_PASSWORD_HASH" "$FINAL_LT_HASH"
 
 if [ $? -eq 0 ]; then # This $? reflects the status of the last mv command from the last _update_or_add_env_var call.
     # For now, assuming if we reached here and mv was fine, primary operations were okay.
@@ -660,4 +605,4 @@ fi
 # Uninstall caddy
 apt remove -y caddy
 
-exit 0 
+exit 0

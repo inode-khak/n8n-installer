@@ -147,6 +147,43 @@ if is_profile_active "portainer"; then
   echo "(Note: On first login, Portainer will prompt to set up an admin user.)"
 fi
 
+if is_profile_active "postiz"; then
+  echo
+  echo "================================= Postiz =============================="
+  echo
+  echo "Host: ${POSTIZ_HOSTNAME:-<hostname_not_set>}"
+  echo "Internal Access (e.g., from n8n): http://postiz:5000"
+fi
+
+if is_profile_active "postgresus"; then
+  echo
+  echo "================================= Postgresus =========================="
+  echo
+  echo "Host: ${POSTGRESUS_HOSTNAME:-<hostname_not_set>}"
+  echo "UI (external via Caddy): https://${POSTGRESUS_HOSTNAME:-<hostname_not_set>}"
+  echo "UI (internal): http://postgresus:4005"
+  echo "------ Backup Target (internal PostgreSQL) ------"
+  echo "PG version: ${POSTGRES_VERSION:-17}"
+  echo "Host: ${POSTGRES_HOST:-postgres}"
+  echo "Port: ${POSTGRES_PORT:-5432}"
+  echo "Username: ${POSTGRES_USER:-postgres}"
+  echo "Password: ${POSTGRES_PASSWORD:-<not_set_in_env>}"
+  echo "DB name: ${POSTGRES_DB:-postgres}"
+  echo "Use HTTPS: false"
+fi
+
+if is_profile_active "ragapp"; then
+  echo
+  echo "================================= RAGApp =============================="
+  echo
+  echo "Host: ${RAGAPP_HOSTNAME:-<hostname_not_set>}"
+  echo "Internal Access (e.g., from n8n): http://ragapp:8000"
+  echo "User: ${RAGAPP_USERNAME:-<not_set_in_env>}"
+  echo "Password: ${RAGAPP_PASSWORD:-<not_set_in_env>}"
+  echo "Admin: https://${RAGAPP_HOSTNAME:-<hostname_not_set>}/admin"
+  echo "API Docs: https://${RAGAPP_HOSTNAME:-<hostname_not_set>}/docs"
+fi
+
 if is_profile_active "comfyui"; then
   echo
   echo "================================= ComfyUI ============================="
@@ -156,10 +193,23 @@ if is_profile_active "comfyui"; then
   echo "Password: ${COMFYUI_PASSWORD:-<not_set_in_env>}"
 fi
 
+if is_profile_active "libretranslate"; then
+  echo
+  echo "================================= LibreTranslate ==========================="
+  echo
+  echo "Host: ${LT_HOSTNAME:-<hostname_not_set>}"
+  echo "User: ${LT_USERNAME:-<not_set_in_env>}"
+  echo "Password: ${LT_PASSWORD:-<not_set_in_env>}"
+  echo "API (external via Caddy): https://${LT_HOSTNAME:-<hostname_not_set>}"
+  echo "API (internal): http://libretranslate:5000"
+  echo "Docs: https://github.com/LibreTranslate/LibreTranslate"
+fi
+
 if is_profile_active "qdrant"; then
   echo
   echo "================================= Qdrant =============================="
   echo
+  echo "Dashboard: https://${QDRANT_HOSTNAME:-<hostname_not_set>}/dashboard"
   echo "Host: https://${QDRANT_HOSTNAME:-<hostname_not_set>}"
   echo "API Key: ${QDRANT_API_KEY:-<not_set_in_env>}"
   echo "Internal REST API Access (e.g., from backend): http://qdrant:6333"
@@ -187,13 +237,37 @@ if is_profile_active "gotenberg"; then
   echo "  Office to PDF: POST /forms/libreoffice/convert"
 fi
 
+if is_profile_active "paddleocr"; then
+  echo
+  echo "================================= PaddleOCR ==========================="
+  echo
+  echo "Host: ${PADDLEOCR_HOSTNAME:-<hostname_not_set>}"
+  echo "User: ${PADDLEOCR_USERNAME:-<not_set_in_env>}"
+  echo "Password: ${PADDLEOCR_PASSWORD:-<not_set_in_env>}"
+  echo "API (external via Caddy): https://${PADDLEOCR_HOSTNAME:-<hostname_not_set>}"
+  echo "API (internal): http://paddleocr:8080"
+  echo "Docs: https://paddleocr.a2.fyi/docs"
+  echo "Notes: PaddleX Basic Serving (CPU), pipeline=OCR"
+fi
+
+if is_profile_active "python-runner"; then
+  echo
+  echo "================================= Python Runner ========================"
+  echo
+  echo "Internal Container DNS: python-runner"
+  echo "Mounted Code Directory: ./python-runner (host) -> /app (container)"
+  echo "Entry File: /app/main.py"
+  echo "(Note: Internal-only service with no exposed ports; view output via logs)"
+  echo "Logs: docker compose -p localai logs -f python-runner"
+fi
+
 if is_profile_active "n8n" || is_profile_active "langfuse"; then
   echo
   echo "================================= Redis (Valkey) ======================"
   echo
   echo "Internal Host: ${REDIS_HOST:-redis}"
   echo "Internal Port: ${REDIS_PORT:-6379}"
-  echo "Password: ${REDIS_AUTH:-LOCALONLYREDIS} (Note: Default if not set in .env)"
+  echo "Password: ${REDIS_AUTH:-}"
   echo "(Note: Primarily for internal service communication, not exposed externally by default)"
 fi
 
@@ -265,6 +339,30 @@ echo
 # --- Update Script Info (Placeholder) ---
 log_info "To update the services, run the 'update.sh' script: bash ./scripts/update.sh"
 
+# ============================================
+# Cloudflare Tunnel Security Notice
+# ============================================
+if is_profile_active "cloudflare-tunnel"; then
+  echo ""
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔒 CLOUDFLARE TUNNEL SECURITY"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "✅ Cloudflare Tunnel is configured and running!"
+  echo ""
+  echo "Your services are accessible through Cloudflare's secure network."
+  echo "All traffic is encrypted and routed through the tunnel."
+  echo ""
+  echo "🛡️  RECOMMENDED SECURITY ENHANCEMENT:"
+  echo "   For maximum security, close the following ports in your VPS firewall:"
+  echo "   • Port 80 (HTTP)"
+  echo "   • Port 443 (HTTPS)" 
+  echo "   • Port 7687 (Neo4j Bolt)"
+  echo ""
+  echo "   ⚠️  Only close ports AFTER confirming tunnel connectivity!"
+  echo ""
+fi
+
 echo
 echo "======================================================================"
 echo
@@ -277,5 +375,3 @@ echo "======================================================================"
 echo
 log_info "Thank you for using this installer setup!"
 echo
-
-exit 0 

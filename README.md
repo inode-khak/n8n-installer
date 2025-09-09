@@ -19,48 +19,56 @@ This setup provides a comprehensive suite of cutting-edge services, all pre-conf
 
 ### What's Included
 
-✅ [**Self-hosted n8n**](https://n8n.io/) - A low-code platform with over 400 integrations and advanced AI components to automate workflows.
-✅ **Caddy, Postgres, and Redis** - Core services for web proxy, database, and caching, which are always included.
+
+✅ **[Caddy](https://caddyserver.com/), [Postgres](https://www.postgresql.org/), and [Redis](https://redis.io/)** - Core services for web proxy, database, and caching, which are always included.
 
 The installer also makes the following powerful open-source tools **available for you to select and deploy** via an interactive wizard during setup:
 
-✅ [**Supabase**](https://supabase.com/) - An open-source alternative to Firebase, providing database storage, user authentication, and more. It's a popular choice for AI applications.
-
-✅ [**Open WebUI**](https://openwebui.com/) - A user-friendly, ChatGPT-like interface to interact privately with your AI models and n8n agents.
-
-✅ [**LiteLLM**](https://www.litellm.ai/) – A lightweight proxy service that enables integration and management of multiple large language models (LLMs). Easily extend the range of available LLMs for tools like Open WebUI.
-
-✅ [**Flowise**](https://flowiseai.com/) - A no-code/low-code AI agent builder that complements n8n perfectly, allowing you to create sophisticated AI applications with ease.
+✅ [**n8n**](https://n8n.io/) - A low-code platform with over 400 integrations and advanced AI components to automate workflows.
 
 ✅ [**ComfyUI**](https://github.com/comfyanonymous/ComfyUI) - A powerful, node-based UI for Stable Diffusion workflows. Build and run image-generation pipelines visually, with support for custom nodes and extensions.
 
+✅ [**Crawl4ai**](https://github.com/Alfresco/crawl4ai) - A flexible web crawler designed for AI, enabling you to extract data from websites for your projects.
+
 ✅ [**Dify**](https://dify.ai/) - An open-source AI application development platform that provides comprehensive LLMOps capabilities, including workflow management, prompt engineering, RAG pipelines, and AI agent orchestration. Perfect for building production-ready AI applications.
 
-✅ [**Qdrant**](https://qdrant.tech/) - A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
-
-✅ [**SearXNG**](https://searxng.org/) - A free, open-source internet metasearch engine. It aggregates results from numerous search services without tracking or profiling you, ensuring your privacy.
-
-✅ [**Caddy**](https://caddyserver.com/) - A powerful web server that automatically handles HTTPS/TLS for your custom domains, keeping your connections secure.
+✅ [**Flowise**](https://flowiseai.com/) - A no-code/low-code AI agent builder that complements n8n perfectly, allowing you to create sophisticated AI applications with ease.
 
 ✅ [**Gotenberg**](https://gotenberg.dev/) - A stateless API for converting HTML, Markdown, Word, Excel, and other documents to PDF, PNG, or JPEG. Available only within the Docker network for internal use by n8n workflows and other services.
 
-✅ [**Langfuse**](https://langfuse.com/) - An open-source platform to help you observe and understand how your AI agents are performing, making it easier to debug and improve them.
+✅ [**Grafana**](https://grafana.com/) - An open-source platform for visualizing monitoring data, helping you understand system performance at a glance.
 
-✅ [**Crawl4ai**](https://github.com/Alfresco/crawl4ai) - A flexible web crawler designed for AI, enabling you to extract data from websites for your projects.
+✅ [**Langfuse**](https://langfuse.com/) - An open-source platform to help you observe and understand how your AI agents are performing, making it easier to debug and improve them.
 
 ✅ [**Letta**](https://docs.letta.com/) - An open-source agent server and SDK that can be connected to various LLM API backends (OpenAI, Anthropic, Ollama, etc.), enabling you to build and manage AI agents.
 
-✅ [**Weaviate**](https://weaviate.io/) - An open-source AI-native vector database with a focus on scalability and ease of use. It can be used for RAG, hybrid search, and more.
+✅ [**LibreTranslate**](https://docs.libretranslate.com/) - Self-hosted translation API (50+ languages).
 
 ✅ [**Neo4j**](https://neo4j.com/) - A graph database management system that allows you to model, store, and query data as a network of nodes and relationships.
 
 ✅ [**Ollama**](https://ollama.com/) - Run Llama 3, Mistral, Gemma, and other large language models locally.
 
-✅ [**Prometheus**](https://prometheus.io/) - An open-source monitoring and alerting toolkit to keep an eye on system health.
+✅ [**Open WebUI**](https://openwebui.com/) - A user-friendly, ChatGPT-like interface to interact privately with your AI models and n8n agents.
 
-✅ [**Grafana**](https://grafana.com/) - An open-source platform for visualizing monitoring data, helping you understand system performance at a glance.
+✅ [**PaddleOCR**](https://www.paddleocr.ai/latest/en/index.html) - A CPU-ready OCR API powered by PaddleX Basic Serving. 
 
 ✅ [**Portainer**](https://www.portainer.io/) - A lightweight, secure web UI to manage your Docker environment (containers, images, volumes, networks) with ease.
+
+✅ [**Postgresus**](https://github.com/RostislavDugin/postgresus) - PostgreSQL monitoring and automated backups with a self-hosted UI.
+
+✅ [**Postiz**](https://postiz.com/) - An open-source social media scheduling and publishing platform.
+
+✅ [**Prometheus**](https://prometheus.io/) - An open-source monitoring and alerting toolkit to keep an eye on system health.
+
+✅ [**Qdrant**](https://qdrant.tech/) - A high-performance open-source vector store, specialized for AI. While Supabase also offers vector capabilities, Qdrant is included for its speed, making it ideal for demanding AI tasks.
+
+✅ [**RAGApp**](https://github.com/ragapp/ragapp) - Open-source application to build Retrieval-Augmented Generation (RAG) assistants over your data. Provides a web UI for chat and an HTTP API for integration with your workflows.
+
+✅ [**SearXNG**](https://searxng.org/) - A free, open-source internet metasearch engine. It aggregates results from numerous search services without tracking or profiling you, ensuring your privacy.
+
+✅ [**Supabase**](https://supabase.com/) - An open-source alternative to Firebase, providing database storage, user authentication, and more. It's a popular choice for AI applications.
+
+✅ [**Weaviate**](https://weaviate.io/) - An open-source AI-native vector database with a focus on scalability and ease of use. It can be used for RAG, hybrid search, and more.
 
 ### Included Community Workflows
 
@@ -125,20 +133,32 @@ After successful installation, your services are up and running! Here's how to g
 1.  **Access Your Services:**
     The installation script provided a summary report with all access URLs and credentials. Please refer to that report. The main services will be available at the following addresses (replace `yourdomain.com` with your actual domain):
     - **n8n:** `n8n.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report. You may be prompted to change this password on first login.)
-    - **Open WebUI:** `webui.yourdomain.com`
-    - **LiteLLM** `litellm.yourdomain.com`
-    - **Flowise:** `flowise.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report.)
+    - **ComfyUI:** `comfyui.yourdomain.com` (Node-based Stable Diffusion UI)
     - **Dify:** `dify.yourdomain.com` (AI application development platform with comprehensive LLMOps capabilities)
-    - **Supabase (Dashboard):** `supabase.yourdomain.com`
+    - **Flowise:** `flowise.yourdomain.com` (Log in with the email address you provided during installation and the initial password from the summary report.)
+    - **Grafana:** `grafana.yourdomain.com`
     - **Langfuse:** `langfuse.yourdomain.com`
     - **Letta:** `letta.yourdomain.com`
-    - **Weaviate:** `weaviate.yourdomain.com`
+    - **LibreTranslate:** `translate.yourdomain.com`
     - **Neo4j:** `neo4j.yourdomain.com`
-    - **Grafana:** `grafana.yourdomain.com`
-    - **SearXNG:** `searxng.yourdomain.com`
-    - **Prometheus:** `prometheus.yourdomain.com` (Typically used as a data source for Grafana)
+    - **Open WebUI:** `webui.yourdomain.com`
+    - **PaddleOCR:** `paddleocr.yourdomain.com`
     - **Portainer:** `portainer.yourdomain.com` (Protected by Caddy basic auth; on first login, complete Portainer admin setup)
-    - **ComfyUI:** `comfyui.yourdomain.com` (Node-based Stable Diffusion UI)
+    - **Postgresus:** `postgresus.yourdomain.com`
+    - **Postiz:** `postiz.yourdomain.com`
+    - **Prometheus:** `prometheus.yourdomain.com` (Typically used as a data source for Grafana)
+    - **Qdrant:** `qdrant.yourdomain.com`
+    - **RAGApp:** `ragapp.yourdomain.com`
+    - **SearXNG:** `searxng.yourdomain.com`
+    - **Supabase (Dashboard):** `supabase.yourdomain.com`
+    - **Weaviate:** `weaviate.yourdomain.com`
+
+### Optional Internal Utility: Python Runner
+
+- **What it is**: An internal-only service to run your custom Python code inside the same Docker network as your other services (n8n, Postgres, Qdrant, etc.). No external ports are exposed, and it is not proxied by Caddy.
+- **How to enable**: Select “Python Runner” in the Service Selection Wizard during install/update, or add the profile manually: `COMPOSE_PROFILES=...,python-runner`.
+- **Where to put code**: Place your Python files in `python-runner/`. The default entry point is `python-runner/main.py`.
+- **Dependencies**: Add them to `python-runner/requirements.txt`; they will be installed automatically on container start.
 
 2.  **Explore n8n:**
 
@@ -155,6 +175,23 @@ After successful installation, your services are up and running! Here's how to g
 
 4.  **Check Monitoring (Optional):**
     - Visit Grafana (`grafana.yourdomain.com`) to see dashboards monitoring your system's performance (data sourced from Prometheus).
+	
+
+## 🔒 Secure Access with Cloudflare Tunnel (Optional)
+
+Cloudflare Tunnel provides zero-trust access to your services without exposing any ports on your server. All traffic is routed through Cloudflare's secure network, providing DDoS protection and hiding your server's IP address.
+
+### Benefits
+- **No exposed ports** - Ports 80/443 can be completely closed
+- **DDoS protection** - Built-in Cloudflare protection
+- **IP hiding** - Your server's real IP is never exposed
+- **Zero-trust security** - Optional Cloudflare Access integration
+- **No public IP required** - Works on private networks
+
+### Setup Instructions
+
+See the Cloudflare Tunnel guide: [cloudflare-instructions.md](cloudflare-instructions.md)
+
 
 ### Using Pre-installed Libraries in n8n's Custom JavaScript
 
@@ -195,13 +232,18 @@ This can be useful for removing old images and freeing up space, but be aware th
 
 - Based on a project by [kossakovsky](https://github.com/kossakovsky/n8n-installer) and [coleam00](https://github.com/coleam00/local-ai-packaged)
 - [Original Starter Kit](https://github.com/n8n-io/self-hosted-ai-starter-kit) by the n8n team
-- [Community forum](https://thinktank.ottomator.ai/c/local-ai/18) over in the oTTomator Think Tank for discussions and support.
-- [GitHub Kanban board](https://github.com/users/coleam00/projects/2/views/1) for tracking new features and bug fixes.
-- Download an N8N + OpenWebUI integration [directly on the Open WebUI site.](https://openwebui.com/f/coleam/n8n_pipe/) (More instructions may be available on that page).
 
 ## Troubleshooting
 
 Here are solutions to common issues you might encounter:
+
+### Sites not loading even after following the instructions
+
+- **Symptom:** Your domains/sites do not open or return errors even though you completed all installation steps.
+- **Likely cause:** Your VPS does not have enough resources for the set of services you selected.
+- **What to try:**
+  1. Check current CPU and RAM usage (e.g., with `top`/`htop`, `free -h`, and `docker stats`). If resources are saturated, upgrade the server or reduce the number of running services.
+  2. Try a minimal configuration — start only `n8n` and verify it comes up. If it works in this minimal setup, enable other services gradually while monitoring the load.
 
 ### Temporary "Dangerous Site" Warning in Browser
 
@@ -210,12 +252,6 @@ Here are solutions to common issues you might encounter:
   1.  **Brief use of a self-signed certificate:** When Caddy (the web server managing your SSL certificates) starts up for a new domain, it might briefly use a temporary, self-signed certificate while it's in the process of requesting and obtaining a valid SSL certificate from Let's Encrypt.
   2.  **Delay in applying the new certificate:** There might also be a short delay before the newly obtained certificate from Let's Encrypt is fully applied and recognized by all systems.
 - **Solution:** This is usually a temporary issue and resolves itself. Give it some time. If the warning persists for more than 24 hours, check your Caddy logs for any errors related to certificate acquisition and ensure your DNS settings are correctly pointing your domain to the server's IP address. You can also try clearing your browser's cache or using an incognito/private window to re-check.
-
-### Supabase Issues
-
-- **Supabase Pooler Restarting:** If the `supabase-pooler` component keeps restarting, follow the instructions in [this GitHub issue](https://github.com/supabase/supabase/issues/30210#issuecomment-2456955578).
-- **Supabase Analytics Startup Failure:** If the `supabase-analytics` component fails to start after changing your Postgres password, you might need to reset its data. **Warning: This will delete your Supabase database data. Proceed with extreme caution and ensure you have backups if needed.** The technical step involves deleting the `supabase/docker/volumes/db/data` folder.
-- **Supabase Service Unavailable:** Ensure your Postgres database password does not contain special characters like "@". Other special characters might also cause issues. If services like n8n report they cannot connect to Supabase, and other diagnostics seem fine, this is a common cause.
 
 ### General Issues
 
@@ -232,15 +268,11 @@ n8n offers excellent resources for getting started with its AI capabilities:
 - [Demonstration of key differences between agents and chains](https://docs.n8n.io/advanced-ai/examples/agent-chain-comparison/)
 - [What are vector databases?](https://docs.n8n.io/advanced-ai/examples/understand-vector-databases/) (Explains tools like Supabase and Qdrant in more detail)
 
-## 🎥 Video Walkthrough
-
-- [Cole's Guide to the AI Starter Kit](https://youtu.be/pOsO40HSbOo) (Provides a visual guide to a similar setup)
-
 ## 🛍️ More AI Templates
 
 For more AI workflow ideas, visit the [**official n8n AI template gallery**](https://n8n.io/workflows/?categories=AI). From each workflow, select the **Use workflow** button to automatically import it into your n8n instance.
 
-### Learn AI Key Concepts (Examples from n8n.io)
+### AI Templates (Examples from n8n.io)
 
 - [AI Agent Chat](https://n8n.io/workflows/1954-ai-agent-chat/)
 - [AI chat with any data source (using the n8n workflow tool)](https://n8n.io/workflows/2026-ai-chat-with-any-data-source-using-the-n8n-workflow-tool/)
@@ -248,9 +280,6 @@ For more AI workflow ideas, visit the [**official n8n AI template gallery**](htt
 - [Use an open-source LLM (via HuggingFace)](https://n8n.io/workflows/1980-use-an-open-source-llm-via-huggingface/)
 - [Chat with PDF docs using AI (quoting sources)](https://n8n.io/workflows/2165-chat-with-pdf-docs-using-ai-quoting-sources/)
 - [AI agent that can scrape webpages](https://n8n.io/workflows/2006-ai-agent-that-can-scrape-webpages/)
-
-### AI Templates (Examples from n8n.io)
-
 - [Tax Code Assistant](https://n8n.io/workflows/2341-build-a-tax-code-assistant-with-qdrant-mistralai-and-openai/)
 - [Breakdown Documents into Study Notes with MistralAI and Qdrant](https://n8n.io/workflows/2339-breakdown-documents-into-study-notes-using-templating-mistralai-and-qdrant/)
 - [Financial Documents Assistant using Qdrant and MistralAI](https://n8n.io/workflows/2335-build-a-financial-documents-assistant-using-qdrant-and-mistralai/)

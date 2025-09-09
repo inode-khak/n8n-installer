@@ -31,6 +31,14 @@
     reverse_proxy nginx:80
 }
 
+# RAGApp
+{$RAGAPP_HOSTNAME} {
+    basic_auth {
+        {$RAGAPP_USERNAME} {$RAGAPP_PASSWORD_HASH}
+    }
+    reverse_proxy ragapp:8000
+}
+
 # Langfuse
 {$LANGFUSE_HOSTNAME} {
     reverse_proxy langfuse-web:3000
@@ -64,6 +72,16 @@
     reverse_proxy portainer:9000
 }
 
+# Postiz
+{$POSTIZ_HOSTNAME} {
+    reverse_proxy postiz:5000
+}
+
+# Postgresus
+{$POSTGRESUS_HOSTNAME} {
+    reverse_proxy postgresus:4005
+}
+
 # Letta
 {$LETTA_HOSTNAME} {
     reverse_proxy letta:8283
@@ -87,6 +105,14 @@
     reverse_proxy comfyui:8188
 }
 
+# LibreTranslate (Self-hosted Translation API)
+{$LT_HOSTNAME} {
+    basic_auth {
+        {$LT_USERNAME} {$LT_PASSWORD_HASH}
+    }
+    reverse_proxy libretranslate:5000
+}
+
 # Neo4j
 {$NEO4J_HOSTNAME} {
     reverse_proxy neo4j:7474
@@ -95,6 +121,14 @@
 # Neo4j Bolt Protocol (wss)
 https://{$NEO4J_HOSTNAME}:7687 {
     reverse_proxy neo4j:7687
+}
+
+# PaddleOCR (PaddleX Basic Serving)
+{$PADDLEOCR_HOSTNAME} {
+    basic_auth {
+        {$PADDLEOCR_USERNAME} {$PADDLEOCR_PASSWORD_HASH}
+    }
+    reverse_proxy paddleocr:8080
 }
 
 import /etc/caddy/addons/*.conf

@@ -50,24 +50,30 @@ current_profiles_for_matching=",$CURRENT_PROFILES_VALUE,"
 # --- Define available services and their descriptions ---
 # Base service definitions (tag, description)
 base_services_data=(
-    "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
+    "cloudflare-tunnel" "Cloudflare Tunnel (Zero-Trust Secure Access)"
+    "comfyui" "ComfyUI (Node-based Stable Diffusion UI)"
+    "crawl4ai" "Crawl4ai (Web Crawler for AI)"
     "dify" "Dify (AI Application Development Platform with LLMOps)"
     "flowise" "Flowise (AI Agent Builder)"
-    "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
-    "portainer" "Portainer (Docker management UI)"
+    "gotenberg" "Gotenberg (Document Conversion API)"
     "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
+    "letta" "Letta (Agent Server & SDK)"
+    "libretranslate" "LibreTranslate (Self-hosted translation API - 50+ languages)"
+    "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
+    "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
+    "neo4j" "Neo4j (Graph Database)"
+    "ollama" "Ollama (Local LLM Runner - select hardware in next step)"
+    "open-webui" "Open WebUI (ChatGPT-like Interface)"
+    "paddleocr" "PaddleOCR (OCR API Server)"
+    "portainer" "Portainer (Docker management UI)"
+    "postgresus" "Postgresus (PostgreSQL backups & monitoring)"
+    "postiz" "Postiz (Social publishing platform)"
+    "python-runner" "Python Runner (Run your custom Python code from ./python-runner)"
     "qdrant" "Qdrant (Vector Database)"
+    "ragapp" "RAGApp (Open-source RAG UI + API)"
+    "searxng" "SearXNG (Private Metasearch Engine)"
     "supabase" "Supabase (Backend as a Service)"
     "weaviate" "Weaviate (Vector Database with API Key Auth)"
-    "neo4j" "Neo4j (Graph Database)"
-    "letta" "Letta (Agent Server & SDK)"
-    "gotenberg" "Gotenberg (Document Conversion API)"
-    "crawl4ai" "Crawl4ai (Web Crawler for AI)"
-    "open-webui" "Open WebUI (ChatGPT-like Interface)"
-    "litellm" "LLM Proxy Service"
-    "searxng" "SearXNG (Private Metasearch Engine)"
-    "ollama" "Ollama (Local LLM Runner - select hardware in next step)"
-    "comfyui" "ComfyUI (Node-based Stable Diffusion UI)"
 )
 
 services=() # This will be the final array for whiptail
@@ -92,7 +98,7 @@ while [ $idx -lt ${#base_services_data[@]} ]; do
     else
         # .env has no COMPOSE_PROFILES or it's empty/just quotes, use hardcoded defaults
         case "$tag" in
-            "n8n"|"flowise"|"monitoring") status="ON" ;;
+            "n8n"|"portainer"|"monitoring"|"postgresus") status="ON" ;;
             *) status="OFF" ;;
         esac
     fi
@@ -101,8 +107,9 @@ while [ $idx -lt ${#base_services_data[@]} ]; do
 done
 
 # Use whiptail to display the checklist
+num_services=$(( ${#services[@]} / 3 ))
 CHOICES=$(whiptail --title "Service Selection Wizard" --checklist \
-  "Choose the services you want to deploy.\nUse ARROW KEYS to navigate, SPACEBAR to select/deselect, ENTER to confirm." 32 90 17 \
+  "Choose the services you want to deploy.\nUse ARROW KEYS to navigate, SPACEBAR to select/deselect, ENTER to confirm." 32 90 $num_services \
   "${services[@]}" \
   3>&1 1>&2 2>&3)
 
@@ -225,6 +232,7 @@ if [ ! -f "$ENV_FILE" ]; then
     touch "$ENV_FILE"
 fi
 
+
 # Remove existing COMPOSE_PROFILES line if it exists
 if grep -q "^COMPOSE_PROFILES=" "$ENV_FILE"; then
     # Using a different delimiter for sed because a profile name might contain '/' (unlikely here)
@@ -242,4 +250,4 @@ fi
 # Make the script executable (though install.sh calls it with bash)
 chmod +x "$SCRIPT_DIR/04_wizard.sh"
 
-exit 0 
+exit 0
