@@ -184,6 +184,16 @@ if is_profile_active "ragapp"; then
   echo "API Docs: https://${RAGAPP_HOSTNAME:-<hostname_not_set>}/docs"
 fi
 
+if is_profile_active "ragflow"; then
+  echo
+  echo "================================= RAGFlow ============================="
+  echo
+  echo "Host: ${RAGFLOW_HOSTNAME:-<hostname_not_set>}"
+  echo "API (external via Caddy): https://${RAGFLOW_HOSTNAME:-<hostname_not_set>}"
+  echo "API (internal): http://ragflow:80"
+  echo "Note: Uses built-in authentication (login/registration available in web UI)"
+fi
+
 if is_profile_active "comfyui"; then
   echo
   echo "================================= ComfyUI ============================="
@@ -223,6 +233,22 @@ if is_profile_active "crawl4ai"; then
   echo "(Note: Not exposed externally via Caddy by default)"
 fi
 
+if is_profile_active "docling"; then
+  echo
+  echo "================================= Docling ============================="
+  echo
+  echo "Web UI: https://${DOCLING_HOSTNAME:-<hostname_not_set>}/ui"
+  echo "API Docs: https://${DOCLING_HOSTNAME:-<hostname_not_set>}/docs"
+  echo ""
+  echo ""
+  echo "User: ${DOCLING_USERNAME:-<not_set_in_env>}"
+  echo "Password: ${DOCLING_PASSWORD:-<not_set_in_env>}"
+  echo ""
+  echo ""
+  echo "API (external via Caddy): https://${DOCLING_HOSTNAME:-<hostname_not_set>}"
+  echo "API (internal): http://docling:5001"
+fi
+
 if is_profile_active "gotenberg"; then
   echo
   echo "================================= Gotenberg ============================"
@@ -235,6 +261,21 @@ if is_profile_active "gotenberg"; then
   echo "  URL to PDF: POST /forms/chromium/convert/url"
   echo "  Markdown to PDF: POST /forms/chromium/convert/markdown"
   echo "  Office to PDF: POST /forms/libreoffice/convert"
+fi
+
+if is_profile_active "waha"; then
+  echo
+  echo "============================== WAHA (WhatsApp HTTP API) =============================="
+  echo
+  echo "Dashboard: https://${WAHA_HOSTNAME:-<hostname_not_set>}/dashboard"
+  echo "Swagger:   https://${WAHA_HOSTNAME:-<hostname_not_set>}"
+  echo "Internal:  http://waha:3000"
+  echo
+  echo "Dashboard User: ${WAHA_DASHBOARD_USERNAME:-<not_set_in_env>}"
+  echo "Dashboard Pass: ${WAHA_DASHBOARD_PASSWORD:-<not_set_in_env>}"
+  echo "Swagger User:   ${WHATSAPP_SWAGGER_USERNAME:-<not_set_in_env>}"
+  echo "Swagger Pass:   ${WHATSAPP_SWAGGER_PASSWORD:-<not_set_in_env>}"
+  echo "API key (plain): ${WAHA_API_KEY_PLAIN:-<not_set_in_env>}"
 fi
 
 if is_profile_active "paddleocr"; then
@@ -277,6 +318,32 @@ if is_profile_active "letta"; then
   echo
   echo "Host: ${LETTA_HOSTNAME:-<hostname_not_set>}"
   echo "Authorization: Bearer ${LETTA_SERVER_PASSWORD}"
+fi
+
+if is_profile_active "lightrag"; then
+  echo
+  echo "================================= LightRAG ============================="
+  echo
+  echo "Host: ${LIGHTRAG_HOSTNAME:-<hostname_not_set>}"
+  echo "Web UI: https://${LIGHTRAG_HOSTNAME:-<hostname_not_set>}"
+  echo "Internal Access (e.g., from n8n): http://lightrag:9621"
+  echo ""
+  echo "Authentication (Web UI):"
+  echo "  User: ${LIGHTRAG_USERNAME:-<not_set_in_env>}"
+  echo "  Password: ${LIGHTRAG_PASSWORD:-<not_set_in_env>}"
+  echo ""
+  echo "API Access:"
+  echo "  API Key: ${LIGHTRAG_API_KEY:-<not_set_in_env>}"
+  echo "  API Docs: https://${LIGHTRAG_HOSTNAME:-<hostname_not_set>}/docs"
+  echo "  Ollama-compatible: https://${LIGHTRAG_HOSTNAME:-<hostname_not_set>}/v1/chat/completions"
+  echo ""
+  echo "Configuration:"
+  echo "  LLM: Ollama (qwen2.5:32b) at http://ollama:11434"
+  echo "  Embeddings: Ollama (bge-m3:latest) at http://ollama:11434"
+  echo "  Storage: Flexible (JSON/PostgreSQL/Neo4j based on installed services)"
+  echo ""
+  echo "Note: Requires Ollama to be installed and running for LLM and embeddings."
+  echo "      Upload documents via /app/data/inputs volume or Web UI."
 fi
 
 if is_profile_active "cpu" || is_profile_active "gpu-nvidia" || is_profile_active "gpu-amd"; then
@@ -373,5 +440,5 @@ echo "3. Configure services as needed (e.g., first-run setup for n8n)."
 echo
 echo "======================================================================"
 echo
-log_info "Thank you for using this installer setup!"
+log_info "Thank you for using this repository!"
 echo

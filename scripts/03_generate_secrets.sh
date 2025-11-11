@@ -57,6 +57,19 @@ declare -A VARS_TO_GENERATE=(
     ["RAGAPP_PASSWORD"]="password:32" # Added RAGApp basic auth password
     ["PADDLEOCR_PASSWORD"]="password:32" # Added PaddleOCR basic auth password
     ["LT_PASSWORD"]="password:32" # Added LibreTranslate basic auth password
+    # WAHA (WhatsApp HTTP API)
+    ["WAHA_DASHBOARD_PASSWORD"]="password:32"
+    ["WHATSAPP_SWAGGER_PASSWORD"]="password:32"
+    # RAGFlow internal credentials
+    ["RAGFLOW_MYSQL_ROOT_PASSWORD"]="password:32"
+    ["RAGFLOW_MINIO_ROOT_PASSWORD"]="password:32"
+    ["RAGFLOW_REDIS_PASSWORD"]="password:32"
+    ["RAGFLOW_ELASTICSEARCH_PASSWORD"]="password:32"
+    # LightRAG credentials
+    ["LIGHTRAG_PASSWORD"]="password:32"
+    ["LIGHTRAG_API_KEY"]="secret:48"
+    # Docling credentials
+    ["DOCLING_PASSWORD"]="password:32"
 )
 
 # Initialize existing_env_vars and attempt to read .env if it exists
@@ -100,6 +113,7 @@ if ! command -v caddy &> /dev/null; then
     exit 1
 fi
 
+require_whiptail
 # Prompt for the domain name
 DOMAIN="" # Initialize DOMAIN variable
 
@@ -112,73 +126,52 @@ if [[ -v existing_env_vars[USER_DOMAIN_NAME] && -n "${existing_env_vars[USER_DOM
     generated_values["USER_DOMAIN_NAME"]="$DOMAIN"
 else
     while true; do
-        echo ""
-        prompt_text="Enter the primary domain name for your services (e.g., example.com): " # Simplified prompt
-        read -p "$prompt_text" DOMAIN_INPUT
+        DOMAIN_INPUT=$(wt_input "Primary Domain" "Enter the primary domain name for your services (e.g., example.com)." "") || true
 
         DOMAIN_TO_USE="$DOMAIN_INPUT" # Direct assignment, no default fallback
 
         # Validate domain input
         if [[ -z "$DOMAIN_TO_USE" ]]; then
-            log_error "Domain name cannot be empty. This field is mandatory." >&2 # Clarified error
-            continue # Ask again
+            wt_msg "Validation" "Domain name cannot be empty."
+            continue
         fi
 
         # Basic check for likely invalid domain characters (very permissive)
         if [[ "$DOMAIN_TO_USE" =~ [^a-zA-Z0-9.-] ]]; then
-            log_warning "Warning: Domain name contains potentially invalid characters: '$DOMAIN_TO_USE'" >&2
+            wt_msg "Validation" "Warning: Domain contains potentially invalid characters: '$DOMAIN_TO_USE'"
         fi
-
-        echo ""
-        read -p "Are you sure '$DOMAIN_TO_USE' is correct? (y/N): " confirm_domain
-        if [[ "$confirm_domain" =~ ^[Yy]$ ]]; then
+        if wt_yesno "Confirm Domain" "Use '$DOMAIN_TO_USE' as the primary domain?" "yes"; then
             DOMAIN="$DOMAIN_TO_USE" # Set the final DOMAIN variable
             generated_values["USER_DOMAIN_NAME"]="$DOMAIN" # Using USER_DOMAIN_NAME
             log_info "Domain set to '$DOMAIN'. It will be saved in .env."
             break # Confirmed, exit loop
-        else
-            log_info "Please try entering the domain name again."
-            # No default domain suggestion to retry with.
         fi
     done
 fi
 
 # Prompt for user email
 if [[ -z "${existing_env_vars[LETSENCRYPT_EMAIL]}" ]]; then
-    echo ""
-    echo "Please enter your email address. This email will be used for:"
-    echo "   - Login to Flowise"
-    echo "   - Login to Supabase"
-    echo "   - Login to SearXNG"
-    echo "   - Login to Grafana"
-    echo "   - Login to Prometheus"
-    echo "   - SSL certificate generation with Let\'s Encrypt"
+    wt_msg "Email Required" "Please enter your email address. It will be used for logins and Let's Encrypt SSL."
 fi
 
 if [[ -n "${existing_env_vars[LETSENCRYPT_EMAIL]}" ]]; then
     USER_EMAIL="${existing_env_vars[LETSENCRYPT_EMAIL]}"
 else
     while true; do
-        echo ""
-        read -p "Email: " USER_EMAIL
+        USER_EMAIL=$(wt_input "Email" "Enter your email address." "") || true
 
         # Validate email input
         if [[ -z "$USER_EMAIL" ]]; then
-            log_error "Email cannot be empty." >&2
-            continue # Ask again
+            wt_msg "Validation" "Email cannot be empty."
+            continue
         fi
 
         # Basic email format validation
         if [[ ! "$USER_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
-            log_warning "Warning: Email format appears to be invalid: '$USER_EMAIL'" >&2
+            wt_msg "Validation" "Warning: Email format appears to be invalid: '$USER_EMAIL'"
         fi
-
-        echo ""
-        read -p "Are you sure '$USER_EMAIL' is correct? (y/N): " confirm_email
-        if [[ "$confirm_email" =~ ^[Yy]$ ]]; then
+        if wt_yesno "Confirm Email" "Use '$USER_EMAIL' as your email?" "yes"; then
             break # Confirmed, exit loop
-        else
-            log_info "Please try entering the email address again."
         fi
     done
 fi
@@ -282,6 +275,10 @@ generated_values["COMFYUI_USERNAME"]="$USER_EMAIL" # Set ComfyUI username for Ca
 generated_values["RAGAPP_USERNAME"]="$USER_EMAIL" # Set RAGApp username for Caddy
 generated_values["PADDLEOCR_USERNAME"]="$USER_EMAIL" # Set PaddleOCR username for Caddy
 generated_values["LT_USERNAME"]="$USER_EMAIL" # Set LibreTranslate username for Caddy
+generated_values["LIGHTRAG_USERNAME"]="$USER_EMAIL" # Set LightRAG username for built-in auth
+generated_values["WAHA_DASHBOARD_USERNAME"]="$USER_EMAIL" # WAHA dashboard username default
+generated_values["WHATSAPP_SWAGGER_USERNAME"]="$USER_EMAIL" # WAHA swagger username default
+generated_values["DOCLING_USERNAME"]="$USER_EMAIL" # Set Docling username for Caddy
 
 
 # Create a temporary file for processing
@@ -305,7 +302,11 @@ found_vars["NEO4J_AUTH_USERNAME"]=0
 found_vars["COMFYUI_USERNAME"]=0
 found_vars["RAGAPP_USERNAME"]=0
 found_vars["PADDLEOCR_USERNAME"]=0
+found_vars["DOCLING_USERNAME"]=0
 found_vars["LT_USERNAME"]=0
+found_vars["LIGHTRAG_USERNAME"]=0
+found_vars["WAHA_DASHBOARD_USERNAME"]=0
+found_vars["WHATSAPP_SWAGGER_USERNAME"]=0
 
 # Read template, substitute domain, generate initial values
 while IFS= read -r line || [[ -n "$line" ]]; do
@@ -352,7 +353,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
             # This 'else' block is for lines from template not covered by existing values or VARS_TO_GENERATE.
             # Check if it is one of the user input vars - these are handled by found_vars later if not in template.
             is_user_input_var=0 # Reset for each line
-            user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME")
+    user_input_vars=("FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "OPENAI_API_KEY" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME" "LIGHTRAG_USERNAME" "WAHA_DASHBOARD_USERNAME" "WHATSAPP_SWAGGER_USERNAME")
             for uivar in "${user_input_vars[@]}"; do
                 if [[ "$varName" == "$uivar" ]]; then
                     is_user_input_var=1
@@ -434,7 +435,7 @@ if [[ -z "${generated_values[SERVICE_ROLE_KEY]}" ]]; then
 fi
 
 # Add any custom variables that weren't found in the template
-for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME"; do
+for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_IMPORT" "OPENAI_API_KEY" "PROMETHEUS_USERNAME" "SEARXNG_USERNAME" "LANGFUSE_INIT_USER_EMAIL" "N8N_WORKER_COUNT" "WEAVIATE_USERNAME" "NEO4J_AUTH_USERNAME" "COMFYUI_USERNAME" "RAGAPP_USERNAME" "PADDLEOCR_USERNAME" "LT_USERNAME" "LIGHTRAG_USERNAME" "WAHA_DASHBOARD_USERNAME" "WHATSAPP_SWAGGER_USERNAME" "DOCLING_USERNAME"; do
     if [[ ${found_vars["$var"]} -eq 0 && -v generated_values["$var"] ]]; then
         # Before appending, check if it's already in TMP_ENV_FILE to avoid duplicates
         if ! grep -q -E "^${var}=" "$TMP_ENV_FILE"; then
@@ -442,6 +443,8 @@ for var in "FLOWISE_USERNAME" "DASHBOARD_USERNAME" "LETSENCRYPT_EMAIL" "RUN_N8N_
         fi
     fi
 done
+
+# --- WAHA API KEY (sha512) --- (moved after .env write to avoid overwrite)
 
 # Second pass: Substitute generated values referenced like ${VAR}
 # We'll process the substitutions line by line to avoid escaping issues
@@ -513,6 +516,23 @@ for key in "${!generated_values[@]}"; do
     # Clean up
     rm -f "$value_file"
 done
+
+# --- WAHA API KEY (sha512) --- ensure after .env write/substitutions ---
+# Generate plaintext API key if missing, then compute sha512:HEX and store in WAHA_API_KEY
+if [[ -z "${generated_values[WAHA_API_KEY_PLAIN]}" ]]; then
+    generated_values[WAHA_API_KEY_PLAIN]="$(gen_base64 48 | tr -d '\n' | tr '/+' 'AZ')"
+fi
+
+PLAINTEXT_KEY="${generated_values[WAHA_API_KEY_PLAIN]}"
+if [[ -n "$PLAINTEXT_KEY" ]]; then
+    SHA_HEX="$(printf "%s" "$PLAINTEXT_KEY" | openssl dgst -sha512 | awk '{print $2}')"
+    if [[ -n "$SHA_HEX" ]]; then
+        generated_values[WAHA_API_KEY]="sha512:${SHA_HEX}"
+    fi
+fi
+
+_update_or_add_env_var "WAHA_API_KEY_PLAIN" "${generated_values[WAHA_API_KEY_PLAIN]}"
+_update_or_add_env_var "WAHA_API_KEY" "${generated_values[WAHA_API_KEY]}"
 
 # Hash passwords using caddy with bcrypt
 PROMETHEUS_PLAIN_PASS="${generated_values["PROMETHEUS_PASSWORD"]}"
@@ -592,6 +612,18 @@ if [[ -z "$FINAL_LT_HASH" && -n "$LT_PLAIN_PASS" ]]; then
     fi
 fi
 _update_or_add_env_var "LT_PASSWORD_HASH" "$FINAL_LT_HASH"
+
+# --- DOCLING ---
+DOCLING_PLAIN_PASS="${generated_values["DOCLING_PASSWORD"]}"
+FINAL_DOCLING_HASH="${generated_values[DOCLING_PASSWORD_HASH]}"
+if [[ -z "$FINAL_DOCLING_HASH" && -n "$DOCLING_PLAIN_PASS" ]]; then
+    NEW_HASH=$(_generate_and_get_hash "$DOCLING_PLAIN_PASS")
+    if [[ -n "$NEW_HASH" ]]; then
+        FINAL_DOCLING_HASH="$NEW_HASH"
+        generated_values["DOCLING_PASSWORD_HASH"]="$NEW_HASH"
+    fi
+fi
+_update_or_add_env_var "DOCLING_PASSWORD_HASH" "$FINAL_DOCLING_HASH"
 
 if [ $? -eq 0 ]; then # This $? reflects the status of the last mv command from the last _update_or_add_env_var call.
     # For now, assuming if we reached here and mv was fine, primary operations were okay.

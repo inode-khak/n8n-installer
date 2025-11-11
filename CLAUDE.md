@@ -4,159 +4,194 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the n8n-installer: a Docker Compose-based installer that creates a comprehensive self-hosted AI automation environment. It includes n8n, Flowise, Open WebUI, Supabase, Qdrant, Langfuse, Ollama, and 20+ other services that can be selectively deployed.
+This is **n8n-install**, a Docker Compose-based installer that provides a comprehensive self-hosted environment for n8n workflow automation and numerous AI/automation services. The installer includes an interactive wizard, automated secret generation, and integrated HTTPS via Caddy.
 
-## Essential Commands
+### Core Architecture
+
+- **Profile-based service management**: Services are activated via Docker Compose profiles (e.g., `n8n`, `flowise`, `monitoring`). Profiles are stored in the `.env` file's `COMPOSE_PROFILES` variable.
+- **No exposed ports**: Services do NOT publish ports directly. All external HTTPS access is routed through Caddy reverse proxy on ports 80/443.
+- **Shared secrets**: Core services (Postgres, Redis/Valkey, Caddy) are always included. Other services are optional and selected during installation.
+- **Queue-based n8n**: n8n runs in `queue` mode with Redis, Postgres, and dynamically scaled workers (`N8N_WORKER_COUNT`).
+
+### Key Files
+
+- `docker-compose.yml`: Service definitions with profiles
+- `Caddyfile`: Reverse proxy configuration with automatic HTTPS
+- `.env`: Generated secrets and configuration (from `.env.example`)
+- `scripts/install.sh`: Main installation orchestrator
+- `scripts/04_wizard.sh`: Interactive service selection using whiptail
+- `scripts/03_generate_secrets.sh`: Secret generation and bcrypt hashing
+- `scripts/07_final_report.sh`: Post-install credential summary
+
+## Common Development Commands
 
 ### Installation and Updates
+
 ```bash
-# Main installation (from project root)
+# Full installation (run from project root)
 sudo bash ./scripts/install.sh
 
-# Update all services to latest versions
+# Update to latest versions and pull new images
 sudo bash ./scripts/update.sh
 
-# Clean up unused Docker resources
+# Re-run service selection wizard (for adding/removing services)
+sudo bash ./scripts/04_wizard.sh
+```
+
+### Docker Compose Operations
+
+```bash
+# Start all enabled profile services
+docker compose -p localai up -d
+
+# View logs for a specific service
+docker compose -p localai logs -f --tail=200 <service-name> | cat
+
+# Recreate a single service (e.g., after config changes)
+docker compose -p localai up -d --no-deps --force-recreate <service-name>
+
+# Stop all services
+docker compose -p localai down
+
+# Remove unused Docker resources
 sudo bash ./scripts/docker_cleanup.sh
 ```
 
-### Docker Operations
+### Development and Testing
+
 ```bash
-# View running services
-docker compose ps
+# Regenerate secrets after modifying .env.example
+bash ./scripts/03_generate_secrets.sh
 
-# View logs for specific service
-docker compose logs [service-name]
+# Check current active profiles
+grep COMPOSE_PROFILES .env
 
-# Restart services with specific profiles
-docker compose --profile n8n,flowise up -d
+# View Caddy logs for reverse proxy issues
+docker compose -p localai logs -f caddy
 
-# Stop all services
-docker compose down
+# Test n8n worker scaling
+# Edit N8N_WORKER_COUNT in .env, then:
+docker compose -p localai up -d --scale n8n-worker=<count>
 ```
 
-### Python Helper Script
-```bash
-# Start services with automatic profile detection
-python3 start_services.py
+## Adding a New Service
+
+Follow this workflow when adding a new optional service (refer to `.cursor/rules/add-new-service.mdc` for complete details):
+
+1. **docker-compose.yml**: Add service with `profiles: ["myservice"]`, `restart: unless-stopped`. Do NOT expose ports.
+2. **Caddyfile**: Add reverse proxy block using `{$MYSERVICE_HOSTNAME}`. Consider if basic auth is needed.
+3. **.env.example**: Add `MYSERVICE_HOSTNAME=myservice.yourdomain.com` and credentials if using basic auth.
+4. **scripts/03_generate_secrets.sh**: Generate passwords and bcrypt hashes. Add to `VARS_TO_GENERATE` map.
+5. **scripts/04_wizard.sh**: Add service to `base_services_data` array for wizard selection.
+6. **scripts/07_final_report.sh**: Add service URL and credentials output using `is_profile_active "myservice"`.
+7. **README.md**: Add one-line description under "What's Included".
+
+**Always ask users if the new service requires Caddy basic auth protection.**
+
+## Important Service Details
+
+### n8n Configuration
+
+- n8n runs in `EXECUTIONS_MODE=queue` with Redis as the queue backend
+- Custom JavaScript libraries are pre-installed: `cheerio`, `axios`, `moment`, `lodash` (see `NODE_FUNCTION_ALLOW_EXTERNAL`)
+- Workflows can access the host filesystem via `/data/shared` (mapped to `./shared`)
+- Worker count is controlled by `N8N_WORKER_COUNT` env var (defaults to 1)
+
+### Caddy Reverse Proxy
+
+- Automatically obtains Let's Encrypt certificates when `LETSENCRYPT_EMAIL` is set
+- Hostnames are passed via environment variables (e.g., `N8N_HOSTNAME`, `FLOWISE_HOSTNAME`)
+- Basic auth uses bcrypt hashes generated by `scripts/03_generate_secrets.sh` via Caddy's hash command
+- Never add `ports:` to services in docker-compose.yml; let Caddy handle all external access
+
+### Secret Generation
+
+The `scripts/03_generate_secrets.sh` script:
+- Generates random passwords, JWT secrets, API keys, and encryption keys
+- Creates bcrypt password hashes using Caddy's `hash-password` command
+- Preserves existing user-provided values in `.env`
+- Supports different secret types via `VARS_TO_GENERATE` map: `password:32`, `jwt`, `api_key`, etc.
+
+### Service Profiles
+
+Common profiles:
+- `n8n`: n8n workflow automation (includes main app, worker, and import services)
+- `flowise`: Flowise AI agent builder
+- `monitoring`: Prometheus, Grafana, cAdvisor, node-exporter
+- `langfuse`: Langfuse observability (includes ClickHouse, MinIO, worker, web)
+- `cpu`, `gpu-nvidia`, `gpu-amd`: Ollama hardware profiles (mutually exclusive)
+- `cloudflare-tunnel`: Cloudflare Tunnel for zero-trust access
+
+## Architecture Patterns
+
+### Healthchecks
+
+Services should define healthchecks for proper dependency management:
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+  interval: 30s
+  timeout: 10s
+  retries: 5
 ```
 
-### Service Management
-```bash
-# Apply configuration updates to running services
-sudo bash ./scripts/apply_update.sh
+### Service Dependencies
 
-# View all available Docker Compose profiles
-grep -E '^\s*profiles:' docker-compose.yml
-
-# Check service health status
-docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+Use `depends_on` with conditions:
+```yaml
+depends_on:
+  postgres:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
 ```
 
-## Architecture
+### Environment Variable Patterns
 
-### Core Installation Flow
-The installation follows a strict 6-step sequence managed by `scripts/install.sh`:
-1. **01_system_preparation.sh** - Updates system, installs dependencies, configures security
-2. **02_install_docker.sh** - Installs Docker Engine and Docker Compose
-3. **03_generate_secrets.sh** - Creates .env file with secure passwords and keys
-4. **04_wizard.sh** - Interactive service selection with whiptail UI
-5. **06_run_services.sh** - Deploys selected services using Docker Compose profiles
-6. **07_final_report.sh** - Displays access URLs and credentials
+- All secrets/passwords end with `_PASSWORD` or `_KEY`
+- All hostnames end with `_HOSTNAME`
+- Password hashes end with `_PASSWORD_HASH`
+- Use `${VAR:-default}` for optional vars with defaults
 
-### Docker Compose Architecture
-- **Profiles**: Services are organized into profiles (n8n, flowise, monitoring, langfuse, ollama, etc.)
-- **Environment**: All configuration through `.env` file generated in step 3
-- **Volumes**: Named volumes for data persistence across container rebuilds
-- **Networks**: All services on default Docker network with internal service discovery
+### Profile Activation Logic
 
-### Key Service Dependencies
-- **n8n**: Requires postgres, redis. Runs in queue mode with configurable worker count
-- **Supabase**: Full stack with postgres, auth, storage, analytics, edge functions
-- **Langfuse**: Requires postgres, redis, clickhouse, minio for LLM observability
-- **Open WebUI**: Can integrate with Ollama for local LLMs
+In bash scripts, check if a profile is active:
+```bash
+if is_profile_active "myservice"; then
+  # Service-specific logic
+fi
+```
 
-## Important Implementation Details
+## Common Issues and Solutions
 
-### Environment Variable System
-- Generated by `03_generate_secrets.sh` using `openssl rand -hex`
-- Contains service hostnames, passwords, API keys
-- Used by both Docker Compose and Caddy for routing
+### Service won't start after adding
+1. Ensure profile is added to `COMPOSE_PROFILES` in `.env`
+2. Check logs: `docker compose -p localai logs <service>`
+3. Verify no port conflicts (no services should publish ports)
+4. Ensure healthcheck is properly defined if service has dependencies
 
-### Service Selection Wizard
-- `04_wizard.sh` uses whiptail to create interactive checklist
-- Updates `COMPOSE_PROFILES` in `.env` based on user selections
-- Some services have dependencies (e.g., langfuse requires clickhouse)
+### Caddy certificate issues
+- DNS must be configured before installation (wildcard A record: `*.yourdomain.com`)
+- Check Caddy logs for certificate acquisition errors
+- Verify `LETSENCRYPT_EMAIL` is set in `.env`
 
-### Shared File Access
-- `./shared/` directory is mounted to `/data/shared` inside n8n containers
-- Use this path in n8n workflows to read/write files on the host system
+### Password hash generation fails
+- Ensure Caddy container is running: `docker compose -p localai up -d caddy`
+- Script uses: `docker exec caddy caddy hash-password --plaintext "$password"`
 
-### Custom n8n Configuration
-- Pre-installs Node.js libraries: cheerio, axios, moment, lodash
-- Runs in production mode with PostgreSQL backend
-- Enables queue mode for parallel workflow processing with configurable worker count
-- Community packages and AI runners enabled
-- Configured for tool usage and external function calls
-- Metrics enabled for monitoring integration
+## File Locations
 
-### Network Architecture
-- Caddy handles HTTPS/TLS termination and reverse proxy
-- Services exposed via subdomains: n8n.domain.com, flowise.domain.com, grafana.domain.com, etc.
-- Internal services (redis, postgres) not exposed externally
-- Supports Cloudflare Tunnel as alternative to port exposure
+- Shared files accessible by n8n: `./shared` (mounted as `/data/shared` in n8n)
+- n8n storage: Docker volume `n8n_storage`
+- Service-specific volumes: Defined in `volumes:` section at top of `docker-compose.yml`
+- Installation logs: stdout during script execution
+- Service logs: `docker compose -p localai logs <service>`
 
-## Common Development Tasks
+## Testing Changes
 
-### Testing Profile Changes
-1. Update `COMPOSE_PROFILES` in `.env`
-2. Run `docker compose --profile [profiles] up -d`
-3. Check `docker compose ps` to verify services started
-
-### Adding New Services
-1. Define service in `docker-compose.yml` with appropriate profile
-2. Add hostname variables to Caddy environment section
-3. Update `04_wizard.sh` to include in service selection
-4. Add Caddyfile routing if service needs web access
-5. Consider service dependencies and health checks
-
-### Backup/Restore Workflows
-- n8n workflows stored in `./n8n/backup/workflows/`
-- Credentials stored in `./n8n/backup/credentials/`
-- Import script: `./n8n/n8n_import_script.sh`
-
-### Troubleshooting Service Issues
-1. Check service logs: `docker compose logs [service-name]`
-2. Verify environment variables in `.env`
-3. Check DNS configuration for domain-based services
-4. Monitor resource usage: `docker stats`
-
-## Security Considerations
-
-- All services require authentication (configured during setup)
-- Firewall configured to only allow SSH, HTTP, HTTPS
-- Fail2Ban enabled for brute-force protection
-- SSL certificates managed by Caddy with Let's Encrypt
-- Sensitive data in `.env` file (never commit to git)
-
-## File Structure Notes
-- `memory-bank/` - Project documentation and development notes
-- `flowise/` - Flowise workflow templates and custom tools
-- `n8n-tool-workflows/` - n8n workflow tools for integration
-- `grafana/` - Monitoring dashboards and provisioning configs
-- `scripts/` - Installation and utility scripts (all bash)
-- `prometheus/` - Prometheus monitoring configuration
-- `searxng/` - SearXNG search engine settings
-- `caddy-addon/` - Additional Caddy configuration files
-- `python-runner/` - Optional Python execution environment
-
-## Critical Implementation Notes
-
-- Never modify the installation script sequence (01-06) without understanding dependencies
-- Always use logging functions from `utils.sh` in new scripts
-- The `.env` file contains all secrets and must never be committed
-- Services use Docker health checks - respect dependency conditions
-- Profile-based deployment allows selective service activation
-- All bash scripts should be executable and follow the established patterns
-- When modifying `docker-compose.yml`, maintain the x-templates pattern for service definitions
-- Community workflows are imported during installation - see `n8n/backup/workflows/` for examples
+When modifying installer scripts:
+1. Test on a clean Ubuntu 24.04 LTS system (minimum 4GB RAM / 2 CPU)
+2. Verify all profile combinations work
+3. Check that `.env` is properly generated
+4. Confirm final report displays correct URLs and credentials
+5. Test update script preserves custom configurations

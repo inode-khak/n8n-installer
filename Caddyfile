@@ -39,6 +39,11 @@
     reverse_proxy ragapp:8000
 }
 
+# RAGFlow
+{$RAGFLOW_HOSTNAME} {
+    reverse_proxy ragflow:80
+}
+
 # Langfuse
 {$LANGFUSE_HOSTNAME} {
     reverse_proxy langfuse-web:3000
@@ -57,6 +62,11 @@
 # Grafana
 {$GRAFANA_HOSTNAME} {
     reverse_proxy grafana:3000
+}
+
+# WAHA (WhatsApp HTTP API)
+{$WAHA_HOSTNAME} {
+    reverse_proxy waha:3000
 }
 
 # Prometheus
@@ -85,6 +95,11 @@
 # Letta
 {$LETTA_HOSTNAME} {
     reverse_proxy letta:8283
+}
+
+# LightRAG (Graph-based RAG with Knowledge Extraction)
+{$LIGHTRAG_HOSTNAME} {
+    reverse_proxy lightrag:9621
 }
 
 # Weaviate
@@ -129,6 +144,14 @@ https://{$NEO4J_HOSTNAME}:7687 {
         {$PADDLEOCR_USERNAME} {$PADDLEOCR_PASSWORD_HASH}
     }
     reverse_proxy paddleocr:8080
+}
+
+# Docling (Document Conversion API)
+{$DOCLING_HOSTNAME} {
+    basic_auth {
+        {$DOCLING_USERNAME} {$DOCLING_PASSWORD_HASH}
+    }
+    reverse_proxy docling:5001
 }
 
 import /etc/caddy/addons/*.conf

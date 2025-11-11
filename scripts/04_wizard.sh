@@ -1,6 +1,6 @@
-#!/bin/bash
+∑#!/bin/bash
 
-# Script to guide user through service selection for n8n-installer
+# Script to guide user through service selection
 
 # Source utility functions, if any, assuming it's in the same directory
 # and .env is in the parent directory
@@ -53,12 +53,14 @@ base_services_data=(
     "cloudflare-tunnel" "Cloudflare Tunnel (Zero-Trust Secure Access)"
     "comfyui" "ComfyUI (Node-based Stable Diffusion UI)"
     "crawl4ai" "Crawl4ai (Web Crawler for AI)"
+    "docling" "Docling (Universal Document Converter to Markdown/JSON)"
     "dify" "Dify (AI Application Development Platform with LLMOps)"
     "flowise" "Flowise (AI Agent Builder)"
     "gotenberg" "Gotenberg (Document Conversion API)"
     "langfuse" "Langfuse Suite (AI Observability - includes Clickhouse, Minio)"
     "letta" "Letta (Agent Server & SDK)"
     "litellm" "LiteLLM (LLM Proxy Service)"
+    "lightrag" "LightRAG (Graph-based RAG with knowledge graphs)"
     "libretranslate" "LibreTranslate (Self-hosted translation API - 50+ languages)"
     "monitoring" "Monitoring Suite (Prometheus, Grafana, cAdvisor, Node-Exporter)"
     "n8n" "n8n, n8n-worker, n8n-import (Workflow Automation)"
@@ -72,8 +74,10 @@ base_services_data=(
     "python-runner" "Python Runner (Run your custom Python code from ./python-runner)"
     "qdrant" "Qdrant (Vector Database)"
     "ragapp" "RAGApp (Open-source RAG UI + API)"
+    "ragflow" "RAGFlow (Deep document understanding RAG engine)"
     "searxng" "SearXNG (Private Metasearch Engine)"
     "supabase" "Supabase (Backend as a Service)"
+    "waha" "WAHA – WhatsApp HTTP API (NOWEB engine)"
     "weaviate" "Weaviate (Vector Database with API Key Auth)"
 )
 
@@ -155,6 +159,25 @@ if [ -n "$CHOICES" ]; then
             selected_profiles+=("$choice")
         fi
     done
+fi
+
+# Enforce mutual exclusivity between Dify and Supabase (compact)
+if printf '%s\n' "${selected_profiles[@]}" | grep -qx "dify" && \
+   printf '%s\n' "${selected_profiles[@]}" | grep -qx "supabase"; then
+    CHOSEN_EXCLUSIVE=$(whiptail --title "Conflict: Dify and Supabase" --default-item "supabase" --radiolist \
+      "Dify and Supabase are mutually exclusive. Choose which one to keep." 15 78 2 \
+      "dify" "Keep Dify (AI App Platform)" OFF \
+      "supabase" "Keep Supabase (Backend as a Service)" ON \
+      3>&1 1>&2 2>&3)
+    [ -z "$CHOSEN_EXCLUSIVE" ] && CHOSEN_EXCLUSIVE="supabase"
+
+    to_remove=$([ "$CHOSEN_EXCLUSIVE" = "dify" ] && echo "supabase" || echo "dify")
+    tmp=()
+    for p in "${selected_profiles[@]}"; do
+        [ "$p" = "$to_remove" ] || tmp+=("$p")
+    done
+    selected_profiles=("${tmp[@]}")
+    log_info "Mutual exclusivity enforced: kept '$CHOSEN_EXCLUSIVE', removed '$to_remove'."
 fi
 
 # If Ollama was selected, prompt for the hardware profile
